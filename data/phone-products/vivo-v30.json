@@ -1,0 +1,71 @@
+{
+  "id": "vivo-v30",
+  "name": "Vivo V30",
+  "brand": "Vivo",
+  "category": "Vivo",
+  "image": "assets/images/products/vivo-v30.jpg",
+  "colors": [
+    {
+      "name": "Blue",
+      "images": [
+        "assets/images/products/vivo-v30-blue.jpg",
+        "assets/images/products/vivo-v30-blue-back.jpg"
+      ]
+    },
+    {
+      "name": "Silver",
+      "images": [
+        "assets/images/products/vivo-v30-silver.jpg",
+        "assets/images/products/vivo-v30-silver-back.jpg"
+      ]
+    },
+    {
+      "name": "Black",
+      "images": [
+        "assets/images/products/vivo-v30-black.jpg",
+        "assets/images/products/vivo-v30-black-back.jpg"
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "id": "64-4",
+      "ram": "4 GB",
+      "storage": "64 GB",
+      "price": 29999,
+      "discount": 5,
+      "available": true
+    },
+    {
+      "id": "128-4",
+      "ram": "4 GB",
+      "storage": "128 GB",
+      "price": 33999,
+      "discount": 7,
+      "available": true
+    },
+    {
+      "id": "128-6",
+      "ram": "6 GB",
+      "storage": "128 GB",
+      "price": 36999,
+      "discount": 10,
+      "available": true
+    }
+  ],
+  "default": {
+    "color": "Blue",
+    "variant": "128-4"
+  },
+  "specs": {
+    "Processor": "Snapdragon 460",
+    "Camera": "13 MP + 2 MP",
+    "Battery": "5000 mAh",
+    "Display": "6.51 inch IPS LCD",
+    "Operating System": "Funtouch OS 14",
+    "Weight": "182 g",
+    "Charging": "18W Fast Charging"
+  },
+  "tags": ["budget"],
+  "status": "active"
+}

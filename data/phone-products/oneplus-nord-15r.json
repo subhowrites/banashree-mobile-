@@ -1,0 +1,64 @@
+{
+  "id": "oneplus-nord-15r",
+  "name": "OnePlus Nord 15R",
+  "brand": "OnePlus",
+  "category": "OnePlus",
+  "image": "assets/images/products/oneplus-nord-15r.jpg",
+  "colors": [
+    {
+      "name": "Green",
+      "images": [
+        "assets/images/products/oneplus-nord-15r-green.jpg",
+        "assets/images/products/oneplus-nord-15r-green-back.jpg"
+      ]
+    },
+    {
+      "name": "Gray",
+      "images": [
+        "assets/images/products/oneplus-nord-15r-gray.jpg",
+        "assets/images/products/oneplus-nord-15r-gray-back.jpg"
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "id": "128-8",
+      "ram": "8 GB",
+      "storage": "128 GB",
+      "price": 39999,
+      "discount": 5,
+      "available": true
+    },
+    {
+      "id": "256-12",
+      "ram": "12 GB",
+      "storage": "256 GB",
+      "price": 45999,
+      "discount": 8,
+      "available": true
+    },
+    {
+      "id": "512-16",
+      "ram": "16 GB",
+      "storage": "512 GB",
+      "price": 52999,
+      "discount": 10,
+      "available": true
+    }
+  ],
+  "default": {
+    "color": "Green",
+    "variant": "256-12"
+  },
+  "specs": {
+    "Processor": "Snapdragon 7+ Gen 2",
+    "Camera": "50 MP + 8 MP",
+    "Battery": "5000 mAh",
+    "Display": "6.7 inch AMOLED 120Hz",
+    "Operating System": "OxygenOS 14",
+    "Weight": "185 g",
+    "Charging": "100W Fast Charging"
+  },
+  "tags": ["new", "trending"],
+  "status": "active"
+}

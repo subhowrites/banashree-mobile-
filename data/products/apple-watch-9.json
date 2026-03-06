@@ -1,0 +1,19 @@
+{
+    "id": "apple-watch-9",
+    "name": "Apple Watch Series 9 GPS",
+    "brand": "Apple",
+    "category": "Watch",
+    "price": "₹41,999",
+    "image": "assets/images/products/apple-watch-9.jpg",
+    "specs": {
+        "Display": "Always-On Retina",
+        "Size": "45mm",
+        "Water Resistant": "50m",
+        "Battery Life": "18 Hours",
+        "Sensors": "Heart Rate, ECG, Blood Oxygen",
+        "Connectivity": "Bluetooth, WiFi",
+        "Warranty": "1 Year"
+    },
+    "tags": ["new", "premium"],
+    "status": "active"
+}

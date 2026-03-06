@@ -1,0 +1,71 @@
+{
+  "id": "oppo-reno12-5g",
+  "name": "Oppo Reno 12 5G",
+  "brand": "Oppo",
+  "category": "Oppo",
+  "image": "assets/images/products/oppo-reno12.jpg",
+  "colors": [
+    {
+      "name": "Blue",
+      "images": [
+        "assets/images/products/oppo-reno12-blue.jpg",
+        "assets/images/products/oppo-reno12-blue-back.jpg"
+      ]
+    },
+    {
+      "name": "Pink",
+      "images": [
+        "assets/images/products/oppo-reno12-pink.jpg",
+        "assets/images/products/oppo-reno12-pink-back.jpg"
+      ]
+    },
+    {
+      "name": "Black",
+      "images": [
+        "assets/images/products/oppo-reno12-black.jpg",
+        "assets/images/products/oppo-reno12-black-back.jpg"
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "id": "128-8",
+      "ram": "8 GB",
+      "storage": "128 GB",
+      "price": 27999,
+      "discount": 5,
+      "available": true
+    },
+    {
+      "id": "256-8",
+      "ram": "8 GB",
+      "storage": "256 GB",
+      "price": 29999,
+      "discount": 8,
+      "available": true
+    },
+    {
+      "id": "256-12",
+      "ram": "12 GB",
+      "storage": "256 GB",
+      "price": 32999,
+      "discount": 10,
+      "available": true
+    }
+  ],
+  "default": {
+    "color": "Blue",
+    "variant": "256-8"
+  },
+  "specs": {
+    "Processor": "MediaTek Dimensity 7050",
+    "Camera": "50 MP + 8 MP + 32 MP",
+    "Battery": "5000 mAh",
+    "Display": "6.7 inch AMOLED",
+    "Operating System": "ColorOS 14",
+    "Weight": "177 g",
+    "Charging": "80W Fast Charging"
+  },
+  "tags": ["new", "trending"],
+  "status": "active"
+}

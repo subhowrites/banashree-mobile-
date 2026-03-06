@@ -1,0 +1,54 @@
+{
+  "id": "iphone-15",
+  "name": "iPhone 15",
+  "brand": "Apple",
+  "category": "iPhone",
+  "image": "assets/images/products/iphone-15.jpg",
+  "colors": [
+    {
+      "name": "Black",
+      "images": [
+        "assets/images/products/iphone-15-black.jpg",
+        "assets/images/products/iphone-15-black-back.jpg"
+      ]
+    },
+    {
+      "name": "Blue",
+      "images": [
+        "assets/images/products/iphone-15-blue.jpg",
+        "assets/images/products/iphone-15-blue-back.jpg"
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "id": "128-6",
+      "ram": "6 GB",
+      "storage": "128 GB",
+      "price": 79900,
+      "discount": 1.5,
+      "available": true
+    },
+    {
+      "id": "256-8",
+      "ram": "8 GB",
+      "storage": "256 GB",
+      "price": 89900,
+      "discount": 5,
+      "available": true
+    }
+  ],
+  "default": {
+    "color": "Black",
+    "variant": "128-6"
+  },
+  "specs": {
+    "Processor": "A16 Bionic",
+    "Camera": "48 MP + 12 MP",
+    "Battery": "3349 mAh",
+    "Display": "6.1 inch Super Retina XDR",
+    "Operating System": "iOS 17",
+    "Weight": "171 g"
+  },
+  "status": "active"
+}

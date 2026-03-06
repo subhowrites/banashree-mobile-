@@ -1,0 +1,64 @@
+{
+  "id": "nothing-phone-2",
+  "name": "Nothing Phone 2",
+  "brand": "Nothing",
+  "category": "Nothing",
+  "image": "assets/images/products/nothing-phone-2.jpg",
+  "colors": [
+    {
+      "name": "White",
+      "images": [
+        "assets/images/products/nothing-phone-2-white.jpg",
+        "assets/images/products/nothing-phone-2-white-back.jpg"
+      ]
+    },
+    {
+      "name": "Gray",
+      "images": [
+        "assets/images/products/nothing-phone-2-gray.jpg",
+        "assets/images/products/nothing-phone-2-gray-back.jpg"
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "id": "128-8",
+      "ram": "8 GB",
+      "storage": "128 GB",
+      "price": 39999,
+      "discount": 5,
+      "available": true
+    },
+    {
+      "id": "256-12",
+      "ram": "12 GB",
+      "storage": "256 GB",
+      "price": 44999,
+      "discount": 8,
+      "available": true
+    },
+    {
+      "id": "512-12",
+      "ram": "12 GB",
+      "storage": "512 GB",
+      "price": 49999,
+      "discount": 10,
+      "available": true
+    }
+  ],
+  "default": {
+    "color": "White",
+    "variant": "128-8"
+  },
+  "specs": {
+    "Processor": "Snapdragon 8+ Gen 1",
+    "Camera": "50 MP + 50 MP",
+    "Battery": "4700 mAh",
+    "Display": "6.7 inch OLED 120Hz",
+    "Operating System": "Nothing OS 2.0",
+    "Weight": "201 g",
+    "Glyph Interface": "Yes"
+  },
+  "tags": ["new", "trending", "premium"],
+  "status": "active"
+}

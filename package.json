@@ -1,0 +1,31 @@
+{
+  "name": "banashree-mobile",
+  "version": "1.0.0",
+  "description": "Banashree Mobile Shop - Hybrid Product Management System",
+  "main": "index.html",
+  "scripts": {
+    "start": "netlify dev",
+    "build": "echo 'No build required'",
+    "dev": "netlify dev",
+    "deploy": "netlify deploy --prod"
+  },
+  "dependencies": {
+    "mongodb": "^6.3.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "mongodb",
+    "netlify",
+    "ecommerce",
+    "mobile-shop"
+  ],
+  "author": "Banashree Mobile",
+  "license": "MIT"
+}

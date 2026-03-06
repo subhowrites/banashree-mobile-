@@ -1,0 +1,10 @@
+Ramesh | 7609074640 | Android
+Suresh | 8765432109 | iPhone
+Rajesh | 7654321098 | Android
+Priya | 6543210987 | Android
+Amit | 5432109876 | iPhone
+
+
+
+
+mongodb+srv://banashree-mobile:<db_password>@banashree-mobile.wps3lj8.mongodb.net/?appName=banashree-mobile

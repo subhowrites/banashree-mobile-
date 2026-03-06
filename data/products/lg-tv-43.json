@@ -1,0 +1,19 @@
+{
+    "id": "lg-tv-43",
+    "name": "LG 43 inch Full HD Smart TV",
+    "brand": "LG",
+    "category": "TV",
+    "price": "₹32,999",
+    "image": "assets/images/products/lg-tv-43.jpg",
+    "specs": {
+        "Screen Size": "43 inch",
+        "Resolution": "Full HD",
+        "Display Type": "LED",
+        "Smart OS": "webOS",
+        "Connectivity": "WiFi, Bluetooth, HDMI x2, USB x1",
+        "Warranty": "1 Year",
+        "Sound": "20W Speakers"
+    },
+    "tags": ["trending"],
+    "status": "active"
+}

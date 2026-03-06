@@ -1,0 +1,19 @@
+{
+    "id": "dell-laptop-15",
+    "name": "Dell Inspiron 15 Laptop",
+    "brand": "Dell",
+    "category": "Laptop",
+    "price": "₹54,999",
+    "image": "assets/images/products/dell-laptop-15.jpg",
+    "specs": {
+        "Processor": "Intel i5 12th Gen",
+        "RAM": "16 GB DDR4",
+        "Storage": "512 GB SSD",
+        "Display": "15.6 inch FHD",
+        "Graphics": "Intel Iris Xe",
+        "OS": "Windows 11",
+        "Warranty": "1 Year"
+    },
+    "tags": ["trending"],
+    "status": "active"
+}

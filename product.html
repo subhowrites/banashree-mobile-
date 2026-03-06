@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details - Subho Mobile Shop</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<!-- ⭐ IMPORTANT: Added class for product details page -->
+<body class="product-details-page">
+    <!-- Same sticky header - UPDATED WITH NEW DESIGN -->
+    <header class="sticky-header">
+        <div class="top-info-bar">
+            <div class="container">
+                <span class="shop-name">Subho Mobile Shop</span>
+                <span class="separator">|</span>
+                <span class="shop-address">Main Road, Malkangiri</span>
+            </div>
+        </div>
+        
+        <!-- MAIN HEADER BAR - UPDATED -->
+        <div class="main-header">
+            <div class="container">
+                <div class="header-content">
+                    <!-- LEFT: MENU ICON + HOME BUTTON -->
+                    <div class="left-nav">
+                        <div class="menu-icon" id="menuToggle">☰</div>
+                    </div>
+                    
+                    <!-- CENTER: LOGO/SHOP NAME -->
+                    <div class="logo">
+                        <a href="index.html">📱 SUBHO MOBILE SHOP</a>
+                    </div>
+                    
+                    <!-- RIGHT: STABLE SEARCH WRAPPER + CALL ICON -->
+                    <div class="right-nav">
+                        
+                        <a href="tel:+917609074640" class="call-icon">📞</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEARCH SUGGESTIONS -->
+        <div class="search-suggestions" id="searchSuggestions"></div>
+
+        <!-- 🍔 MENU DROPDOWN -->
+        <div class="menu-dropdown" id="menuDropdown">
+            <a href="index.html" class="menu-item">
+                <span>🏠</span> Home
+            </a>
+            <a href="about.html" class="menu-item">
+                <span>📋</span> About
+            </a>
+            <a href="contact.html" class="menu-item">
+                <span>📞</span> Contact
+            </a>
+        </div>
+    </header>
+
+    <main class="product-detail-page">
+        <div class="container">
+            <!-- 🔙 BACK + HOME BUTTONS - ONLY 2 BUTTONS -->
+            <div class="nav-buttons">
+                <a href="#" onclick="history.back()" class="nav-btn back-btn">← Back</a>
+                <a href="index.html" class="nav-btn home-btn">🏠 Home</a>
+            </div>
+
+            <!-- ⭐ Product Detail Container - Updated with new structure -->
+            <div class="product-detail" id="productDetail">
+                <!-- Product will be loaded dynamically by main.js -->
+                <!-- Static structure will be replaced by JS -->
+            </div>
+
+            <!-- WHY BUY FROM US -->
+            <section class="why-us">
+                <h2 class="section-title">✨ Why Buy From Us</h2>
+                <div class="features-grid">
+                    <div class="feature-item">📱 Latest Models</div>
+                    <div class="feature-item">✅ Genuine Products</div>
+                    <div class="feature-item">💰 Best Price</div>
+                    <div class="feature-item">🤝 Local Support</div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="products.html">All Products</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>📞 +91 7609074640</p>
+                    <p>📧 info@subhomobile.com</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Follow Us</h4>
+                    <div class="social-icons">
+                        <a href="#">📘</a>
+                        <a href="#">📷</a>
+                        <a href="#">🐦</a>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                © 2026 Subho Mobile Shop. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/data-loader.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

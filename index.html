@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Subho Mobile Shop - Latest Smartphones in Malkangiri</title>
+    <meta name="description" content="Latest smartphones available at Subho Mobile Shop, Main Road Malkangiri. Vivo, iPhone, Samsung, Oppo and more. Best prices and genuine products.">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <!-- 📌 STICKY TOP AREA - FIXED ON ALL PAGES -->
+    <header class="sticky-header">
+        <!-- TOP INFO BAR -->
+        <div class="top-info-bar">
+            <div class="container">
+                <span class="shop-name">Subho Mobile Shop</span>
+                <span class="separator">|</span>
+                <span class="shop-address">Main Road, Malkangiri</span>
+            </div>
+        </div>
+        
+        <!-- MAIN HEADER BAR - UPDATED -->
+        <div class="main-header">
+            <div class="container">
+                <div class="header-content">
+                    <!-- LEFT: MENU ICON + HOME BUTTON -->
+                    <div class="left-nav">
+                        <div class="menu-icon" id="menuToggle">☰</div>
+                        
+                        
+                    </div>
+                    
+                    <!-- CENTER: LOGO/SHOP NAME -->
+                    <div class="logo">
+                        <a href="">📱 SUBHO MOBILE SHOP</a>
+                    </div>
+                    
+                    <!-- RIGHT: STABLE SEARCH WRAPPER + CALL ICON -->
+                    <div class="right-nav">
+                        <div class="search-wrapper">
+                            <input type="text" id="searchInput" placeholder="Search phones (Vivo, iPhone, Galaxy...)" autocomplete="off">
+                            <span class="search-submit">🔍</span>
+                        </div>
+                        <a href="tel:+917609074640" class="call-icon">📞</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEARCH SUGGESTIONS (will appear below search bar) -->
+        <div class="search-suggestions" id="searchSuggestions"></div>
+
+        <!-- 🍔 MENU DROPDOWN -->
+        <div class="menu-dropdown" id="menuDropdown">
+            <a href="index.html" class="menu-item">
+                <span>🏠</span> Home
+            </a>
+            <a href="about.html" class="menu-item">
+                <span>📋</span> About
+            </a>
+            <a href="terms&conditions.html" class="menu-item">
+                <span>📋</span> Term's & Condition's
+            </a>
+            <a href="contact.html" class="menu-item">
+                <span>📞</span> Contact
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <!-- 🏪 SHOP BANNER SECTION -->
+        <section class="shop-banner">
+            <div class="container">
+                <div class="banner-content">
+                    <h1>Latest Smartphones Available Here</h1>
+                    <p>All new launches & best deals</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 📂 CATEGORY FILTER SECTION (Chips) -->
+        <section class="category-section">
+            <div class="container">
+                <div class="category-wrapper" id="categoryContainer">
+                    <!-- Categories will be loaded from JSON -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 🎯 CATEGORY BOX SECTION WITH HORIZONTAL SCROLL -->
+        <section class="category-box-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">📱 Shop by Category</h2>
+                    <div class="category-box-nav">
+                        <button class="category-box-arrow prev" id="categoryBoxPrev">‹</button>
+                        <button class="category-box-arrow next" id="categoryBoxNext">›</button>
+                    </div>
+                </div>
+                <div class="category-box-wrapper" id="categoryBoxWrapper">
+                    <div class="category-box-container" id="categoryBoxContainer">
+                        <!-- Categories will be loaded dynamically from main.js -->
+                        <!-- Static fallback in case JS fails -->
+                        <a href="products.html" class="category-box-card">
+                            <img src="https://via.placeholder.com/60x60?text=📱" alt="Mobiles" class="category-box-image">
+                            <span class="category-box-name">Mobiles</span>
+                        </a>
+                        <a href="tv.html" class="category-box-card">
+                            <img src="https://via.placeholder.com/60x60?text=📺" alt="Smart TVs" class="category-box-image">
+                            <span class="category-box-name">Smart TVs</span>
+                        </a>
+                        <a href="ac.html" class="category-box-card">
+                            <img src="https://via.placeholder.com/60x60?text=❄️" alt="ACs" class="category-box-image">
+                            <span class="category-box-name">ACs</span>
+                        </a>
+                        <a href="earphones.html" class="category-box-card">
+                            <img src="https://via.placeholder.com/60x60?text=🎧" alt="Earphones" class="category-box-image">
+                            <span class="category-box-name">Earphones</span>
+                        </a>
+                        <a href="watches.html" class="category-box-card">
+                            <img src="https://via.placeholder.com/60x60?text=⌚" alt="Watches" class="category-box-image">
+                            <span class="category-box-name">Watches</span>
+                        </a>
+                        <a href="laptops.html" class="category-box-card">
+                            <img src="https://via.placeholder.com/60x60?text=💻" alt="Laptops" class="category-box-image">
+                            <span class="category-box-name">Laptops</span>
+                        </a>
+                        <a href="tablets.html" class="category-box-card">
+                            <img src="https://via.placeholder.com/60x60?text=📟" alt="Tablets" class="category-box-image">
+                            <span class="category-box-name">Tablets</span>
+                        </a>
+                        <a href="accessories.html" class="category-box-card">
+                            <img src="https://via.placeholder.com/60x60?text=🔌" alt="Accessories" class="category-box-image">
+                            <span class="category-box-name">Accessories</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== NEW: NEW LAUNCH FEATURE CARD SECTION ===== -->
+        <section class="new-launch-section">
+            <div class="container">
+                <h2 class="section-title">New Launch</h2>
+                <div class="new-launch-container" id="newLaunchContainer">
+                    <!-- New launch cards will be loaded dynamically by main.js -->
+                    <!-- Static loader while JS loads -->
+                    <div class="new-launch-loader">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 🔥 TRENDING SECTION -->
+        <section class="trending-section">
+            <div class="container">
+                <h2 class="section-title">🔥 Trending Phones</h2>
+                <div class="trending-wrapper" id="trendingContainer">
+                    <!-- Trending phones will be loaded here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 📱 MAIN PRODUCT GRID -->
+        <section class="product-section">
+            <div class="container">
+                <h2 class="section-title">📱 All Smartphones</h2>
+                <div class="product-grid" id="productGrid">
+                    <!-- Products will be loaded here -->
+                </div>
+                
+                <!-- 📄 PAGINATION -->
+                <div class="pagination" id="pagination">
+                    <!-- Pagination will be generated here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 🌟 WHY BUY FROM US -->
+        <section class="why-us">
+            <div class="container">
+                <h2 class="section-title">✨ Why Buy From Us</h2>
+                <div class="features-grid">
+                    <div class="feature-item">📱 Latest Models</div>
+                    <div class="feature-item">✅ Genuine Products</div>
+                    <div class="feature-item">💰 Best Price</div>
+                    <div class="feature-item">🤝 Local Support</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 📍 SHOP INFO + MAP -->
+        <section class="shop-info">
+            <div class="container">
+                <div class="shop-details">
+                    <h3>📍 Subho Mobile Shop</h3>
+                    <p>Main Road, Near DNk , Malkangiri, Odisha - 764045</p>
+                    <p>⏰ Open: 10:00 AM - 8:00 PM (All Days)</p>
+                    <p>📞 +91 7609074640</p>
+                </div>
+                <div class="shop-map">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d59862.798371051285!2d85.77169111567345!3d20.324058325383014!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a190943c13d90f3%3A0x1dd81cdcdbfc101a!2sBanashree%20Mobile!5e0!3m2!1sen!2sin!4v1772634239496!5m2!1sen!2sin" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="products.html">All Products</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>📞 +91 7609074640</p>
+                    <p>📧 info@Subhomobile.com</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Follow Us</h4>
+                    <div class="social-icons">
+                        <a href="#">📘</a>
+                        <a href="#">📷</a>
+                        <a href="#">🐦</a>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                © 2026 Subho Mobile Shop. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- 📁 SCRIPTS -->
+    <script src="js/data-loader.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

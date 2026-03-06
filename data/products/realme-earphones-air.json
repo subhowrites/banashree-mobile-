@@ -1,0 +1,19 @@
+{
+    "id": "realme-earphones-air",
+    "name": "Realme Air 5 Pro Wireless Earphones",
+    "brand": "Realme",
+    "category": "Earphones",
+    "price": "₹3,999",
+    "image": "assets/images/products/realme-earphones-air.jpg",
+    "specs": {
+        "Type": "True Wireless",
+        "Battery Life": "38 Hours",
+        "Bluetooth Version": "5.3",
+        "Water Resistant": "IPX5",
+        "Noise Cancellation": "Active",
+        "Driver Size": "11mm",
+        "Warranty": "1 Year"
+    },
+    "tags": ["trending"],
+    "status": "active"
+}

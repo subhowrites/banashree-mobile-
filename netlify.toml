@@ -1,0 +1,58 @@
+# netlify.toml - Netlify configuration file
+
+[build]
+  # Build command (अगर कुछ build करना हो)
+  command = "echo 'No build required'"
+  
+  # Functions ka folder
+  functions = "netlify/functions"
+  
+  # Publish directory (root folder)
+  publish = "."
+
+[build.environment]
+  # Node.js version specify करो
+  NODE_VERSION = "18"
+
+# Development settings
+[dev]
+  # Local development ke liye functions path
+  functions = "netlify/functions"
+  
+  # Local development ke liye publish directory
+  publish = "."
+  
+  # Port (optional)
+  port = 8888
+
+# Redirects - API calls ko functions par map करो
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
+
+# Headers - Security और CORS के लिए
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Admin panel ke liye special headers (optional)
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Pragma = "no-cache"
+    Expires = "0"
+
+# Functions ke liye headers
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"

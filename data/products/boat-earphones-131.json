@@ -1,0 +1,19 @@
+{
+    "id": "boat-earphones-131",
+    "name": "boAt Airdopes 131 Bluetooth Earphones",
+    "brand": "boAt",
+    "category": "Earphones",
+    "price": "₹1,299",
+    "image": "assets/images/products/boat-earphones-131.jpg",
+    "specs": {
+        "Type": "True Wireless",
+        "Battery Life": "40 Hours",
+        "Bluetooth Version": "5.2",
+        "Water Resistant": "IPX4",
+        "Charging": "USB-C",
+        "Driver Size": "13mm",
+        "Warranty": "1 Year"
+    },
+    "tags": ["trending"],
+    "status": "active"
+}

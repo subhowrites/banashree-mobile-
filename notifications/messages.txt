@@ -1,0 +1,11 @@
+NEW_PHONE:
+New phone available at Subho Mobile Shop.
+See details: www.shopname.com
+
+OFFER:
+New offer updated on our website.
+Visit now: www.shopname.com
+
+TRENDING:
+Check out our latest trending phones.
+www.shopname.com/trending

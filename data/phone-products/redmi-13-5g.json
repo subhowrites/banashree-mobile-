@@ -1,0 +1,71 @@
+{
+  "id": "redmi-13-5g",
+  "name": "Redmi 13 5G",
+  "brand": "Redmi",
+  "category": "Redmi",
+  "image": "assets/images/products/redmi-13.jpg",
+  "colors": [
+    {
+      "name": "Midnight Black",
+      "images": [
+        "assets/images/products/redmi-13-black.jpg",
+        "assets/images/products/redmi-13-black-back.jpg"
+      ]
+    },
+    {
+      "name": "Ocean Blue",
+      "images": [
+        "assets/images/products/redmi-13-blue.jpg",
+        "assets/images/products/redmi-13-blue-back.jpg"
+      ]
+    },
+    {
+      "name": "Forest Green",
+      "images": [
+        "assets/images/products/redmi-13-green.jpg",
+        "assets/images/products/redmi-13-green-back.jpg"
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "id": "128-6",
+      "ram": "6 GB",
+      "storage": "128 GB",
+      "price": 21999,
+      "discount": 5,
+      "available": true
+    },
+    {
+      "id": "128-8",
+      "ram": "8 GB",
+      "storage": "128 GB",
+      "price": 23999,
+      "discount": 7,
+      "available": true
+    },
+    {
+      "id": "256-8",
+      "ram": "8 GB",
+      "storage": "256 GB",
+      "price": 25999,
+      "discount": 10,
+      "available": true
+    }
+  ],
+  "default": {
+    "color": "Midnight Black",
+    "variant": "256-8"
+  },
+  "specs": {
+    "Processor": "MediaTek Dimensity 7050",
+    "Camera": "50 MP + 8 MP + 32 MP",
+    "Battery": "5000 mAh",
+    "Display": "6.7 inch AMOLED",
+    "Operating System": "HyperOS",
+    "Weight": "185 g",
+    "Charging": "33W Fast Charging"
+  },
+  "tags": ["new", "trending"],
+  "status": "active"
+}

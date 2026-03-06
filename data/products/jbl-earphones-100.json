@@ -1,0 +1,19 @@
+{
+    "id": "jbl-earphones-100",
+    "name": "JBL Tune 100 Bluetooth Earphones",
+    "brand": "JBL",
+    "category": "Earphones",
+    "price": "₹2,499",
+    "image": "assets/images/products/jbl-earphones-100.jpg",
+    "specs": {
+        "Type": "Neckband",
+        "Battery Life": "20 Hours",
+        "Bluetooth Version": "5.0",
+        "Water Resistant": "IPX4",
+        "Charging": "Micro USB",
+        "Driver Size": "12mm",
+        "Warranty": "1 Year"
+    },
+    "tags": ["new"],
+    "status": "active"
+}

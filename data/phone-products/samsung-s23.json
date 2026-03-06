@@ -1,0 +1,78 @@
+{
+  "id": "samsung-s23",
+  "name": "Samsung Galaxy S23",
+  "brand": "Samsung",
+  "category": "Samsung",
+  "image": "assets/images/products/samsung-s23.jpg",
+  "colors": [
+    {
+      "name": "Phantom Black",
+      "images": [
+        "assets/images/products/samsung-s23-black.jpg",
+        "assets/images/products/samsung-s23-black-back.jpg"
+      ]
+    },
+    {
+      "name": "Cream",
+      "images": [
+        "assets/images/products/samsung-s23-cream.jpg",
+        "assets/images/products/samsung-s23-cream-back.jpg"
+      ]
+    },
+    {
+      "name": "Green",
+      "images": [
+        "assets/images/products/samsung-s23-green.jpg",
+        "assets/images/products/samsung-s23-green-back.jpg"
+      ]
+    },
+    {
+      "name": "Lavender",
+      "images": [
+        "assets/images/products/samsung-s23-lavender.jpg",
+        "assets/images/products/samsung-s23-lavender-back.jpg"
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "id": "128-8",
+      "ram": "8 GB",
+      "storage": "128 GB",
+      "price": 69999,
+      "discount": 5,
+      "available": true
+    },
+    {
+      "id": "256-8",
+      "ram": "8 GB",
+      "storage": "256 GB",
+      "price": 74999,
+      "discount": 8,
+      "available": true
+    },
+    {
+      "id": "512-8",
+      "ram": "8 GB",
+      "storage": "512 GB",
+      "price": 84999,
+      "discount": 10,
+      "available": true
+    }
+  ],
+  "default": {
+    "color": "Phantom Black",
+    "variant": "256-8"
+  },
+  "specs": {
+    "Processor": "Snapdragon 8 Gen 2",
+    "Camera": "50 MP + 12 MP + 10 MP",
+    "Battery": "3900 mAh",
+    "Display": "6.1 inch Dynamic AMOLED 120Hz",
+    "Operating System": "One UI 6.0",
+    "Weight": "168 g",
+    "Charging": "25W Fast Charging"
+  },
+  "tags": ["new", "trending"],
+  "status": "active"
+}

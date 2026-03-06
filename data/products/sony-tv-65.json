@@ -1,0 +1,19 @@
+{
+    "id": "sony-tv-65",
+    "name": "Sony 65 inch 4K OLED TV",
+    "brand": "Sony",
+    "category": "TV",
+    "price": "₹1,89,999",
+    "image": "assets/images/products/sony-tv-65.jpg",
+    "specs": {
+        "Screen Size": "65 inch",
+        "Resolution": "4K Ultra HD",
+        "Display Type": "OLED",
+        "Smart OS": "Android TV",
+        "Connectivity": "WiFi, Bluetooth, HDMI x4, USB x3",
+        "Warranty": "3 Years",
+        "Sound": "30W Dolby Atmos"
+    },
+    "tags": ["new", "premium"],
+    "status": "active"
+}

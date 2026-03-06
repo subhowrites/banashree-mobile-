@@ -1,0 +1,20 @@
+{
+    "id": "samsung-ac-2ton",
+    "name": "Samsung 2 Ton 3 Star Inverter AC",
+    "brand": "Samsung",
+    "category": "AC",
+    "price": "₹51,999",
+    "image": "assets/images/products/samsung-ac-2ton.jpg",
+    "specs": {
+        "Capacity": "2 Ton",
+        "Star Rating": "3 Star",
+        "Type": "Inverter Split",
+        "Cooling Capacity": "6800 W",
+        "Energy Efficient": "Yes",
+        "Compressor": "Digital Inverter",
+        "Warranty": "5 Years",
+        "Features": "Anti-bacterial, Auto Clean"
+    },
+    "tags": ["trending"],
+    "status": "active"
+}

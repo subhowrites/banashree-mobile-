@@ -1,0 +1,20 @@
+{
+    "id": "lg-ac-1.5ton",
+    "name": "LG 1.5 Ton 5 Star Inverter AC",
+    "brand": "LG",
+    "category": "AC",
+    "price": "₹42,999",
+    "image": "assets/images/products/lg-ac-1.5ton.jpg",
+    "specs": {
+        "Capacity": "1.5 Ton",
+        "Star Rating": "5 Star",
+        "Type": "Inverter Split",
+        "Cooling Capacity": "5200 W",
+        "Energy Efficient": "Yes",
+        "Compressor": "Dual Rotary",
+        "Warranty": "5 Years on Compressor",
+        "Features": "WiFi, Anti-bacterial Filter"
+    },
+    "tags": ["new", "trending"],
+    "status": "active"
+}

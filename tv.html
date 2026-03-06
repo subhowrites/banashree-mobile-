@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart TVs - Subho Mobile Shop Malkangiri</title>
+    <meta name="description" content="Browse all Smart TVs available at Subho Mobile Shop. Samsung, LG, Sony and more with full specifications.">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <!-- Same sticky header as index.html -->
+    <header class="sticky-header">
+        <!-- TOP INFO BAR -->
+        <div class="top-info-bar">
+            <div class="container">
+                <span class="shop-name">Subho Mobile Shop</span>
+                <span class="separator">|</span>
+                <span class="shop-address">Main Road, Malkangiri</span>
+            </div>
+        </div>
+        
+        <!-- MAIN HEADER BAR -->
+        <div class="main-header">
+            <div class="container">
+                <div class="header-content">
+                    <!-- LEFT: MENU ICON + HOME BUTTON -->
+                    <div class="left-nav">
+                        <div class="menu-icon" id="menuToggle">☰</div>
+                        
+                    </div>
+                    
+                    <!-- CENTER: LOGO/SHOP NAME -->
+                    <div class="logo">
+                        <a href="index.html">📱 SUBHO MOBILE SHOP</a>
+                    </div>
+                    
+                    <!-- RIGHT: SEARCH WRAPPER + CALL ICON -->
+                    <div class="right-nav">
+                        <div class="search-wrapper">
+                            <input type="text" id="searchInput" placeholder="Search products..." autocomplete="off">
+                            <span class="search-submit">🔍</span>
+                        </div>
+                        <a href="tel:+917609074640" class="call-icon">📞</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEARCH SUGGESTIONS -->
+        <div class="search-suggestions" id="searchSuggestions"></div>
+
+        <!-- 🍔 MENU DROPDOWN -->
+        <div class="menu-dropdown" id="menuDropdown">
+            <a href="index.html" class="menu-item">
+                <span>🏠</span> Home
+            </a>
+            <a href="about.html" class="menu-item">
+                <span>📋</span> About
+            </a>
+            <a href="contact.html" class="menu-item">
+                <span>📞</span> Contact
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Back to Home -->
+        <div class="container">
+            <div class="nav-buttons">
+                <a href="#" onclick="history.back(); return false;" 
+                   style="background-color: #059669; color: white; padding: 12px 24px; border-radius: 30px; text-decoration: none; display: inline-block; font-weight: 600; border: 1px solid #047857; margin-right: 10px; transition: all 0.3s ease;"
+                   onmouseover="this.style.backgroundColor='#047857'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 15px rgba(5, 150, 105, 0.4)';"
+                   onmouseout="this.style.backgroundColor='#059669'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.2)';">
+                    ← Back
+                </a>
+                <a href="index.html" 
+                   style="background-color: #0f172a; color: white; padding: 12px 24px; border-radius: 30px; text-decoration: none; display: inline-block; font-weight: 600; border: 1px solid #1e293b; transition: all 0.3s ease;"
+                   onmouseover="this.style.backgroundColor='#1e293b'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 15px rgba(15, 23, 42, 0.4)';"
+                   onmouseout="this.style.backgroundColor='#0f172a'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.2)';">
+                    🏠 Home
+                </a>
+            </div>
+        </div>
+
+
+        <!-- Page Title -->
+        <div class="page-header">
+            <div class="container">
+                <h1>📺 All Smart TVs</h1>
+            </div>
+        </div>
+
+        <!-- 📂 CATEGORY FILTER -->
+        <section class="category-section">
+            <div class="container">
+                <div class="category-wrapper" id="categoryContainer">
+                    <!-- Categories will be loaded dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 📱 PRODUCT GRID -->
+        <section class="product-section">
+            <div class="container">
+                <div class="product-grid" id="productGrid">
+                    <!-- Products loaded here - only TVs -->
+                </div>
+                
+                <!-- PAGINATION -->
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="products.html">All Products</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>📞 +91 7609074640</p>
+                    <p>📧 info@subhomobile.com</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Follow Us</h4>
+                    <div class="social-icons">
+                        <a href="#">📘</a>
+                        <a href="#">📷</a>
+                        <a href="#">🐦</a>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                © 2026 Subho Mobile Shop. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/data-loader.js"></script>
+    <script src="js/main.js"></script>
+    
+    <!-- ===== FIXED: DYNAMIC BRANDS SCRIPT ===== -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current category
+            window.currentCategory = 'TV';
+            
+            // Small delay to ensure products are loaded
+            setTimeout(async function() {
+                try {
+                    // Get all products and filter for TVs
+                    const allProducts = await DataLoader.loadAllProducts();
+                    const tvProducts = allProducts.filter(p => p.category === 'TV');
+                    
+                    console.log('TV Products found:', tvProducts.length);
+                    
+                    // Get unique brands from actual TV products
+                    const availableBrands = [...new Set(tvProducts.map(p => p.brand))];
+                    
+                    console.log('TV Brands found:', availableBrands);
+                    
+                    // Always show 'All' first, then all available brands
+                    const categories = ['All', ...availableBrands];
+                    
+                    // Update category buttons
+                    const container = document.getElementById('categoryContainer');
+                    if (!container) return;
+                    
+                    container.innerHTML = categories.map(cat => `
+                        <button class="category-btn ${cat === 'All' ? 'active' : ''}" data-category="${cat}">
+                            ${cat}
+                        </button>
+                    `).join('');
+                    
+                    // Add click handlers
+                    document.querySelectorAll('.category-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                            this.classList.add('active');
+                            
+                            // Call filterProducts from main.js
+                            if (window.filterProducts) {
+                                window.filterProducts(this.dataset.category);
+                            } else {
+                                console.error('filterProducts not found');
+                                
+                                // Fallback: direct filter
+                                const category = this.dataset.category;
+                                if (category !== 'All') {
+                                    window.currentFilter = category;
+                                    window.currentPage = 1;
+                                    if (typeof renderProducts === 'function') {
+                                        renderProducts();
+                                    }
+                                } else {
+                                    window.currentFilter = 'All';
+                                    window.currentPage = 1;
+                                    if (typeof renderProducts === 'function') {
+                                        renderProducts();
+                                    }
+                                }
+                            }
+                        });
+                    });
+                    
+                } catch (error) {
+                    console.error('Error loading categories:', error);
+                    
+                    // Fallback to at least show All button
+                    const container = document.getElementById('categoryContainer');
+                    if (container) {
+                        container.innerHTML = '<button class="category-btn active" data-category="All">All</button>';
+                    }
+                }
+            }, 300); // Small delay to ensure DataLoader is ready
+        });
+    </script>
+</body>
+</html>
