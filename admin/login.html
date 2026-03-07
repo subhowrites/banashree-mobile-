@@ -5,18 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login - Banashree Mobile</title>
     
-    <!-- Import Map for Firebase (required) -->
-    <script type="importmap">
-        {
-            "imports": {
-                "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
-                "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
-                "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js",
-                "firebase/storage": "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js"
-            }
-        }
-    </script>
-    
     <!-- Admin CSS -->
     <link rel="stylesheet" href="css/admin.css">
     
@@ -359,11 +347,10 @@
             <button type="submit" id="loginBtn" class="login-btn">Sign In</button>
         </form>
         
-        <!-- Demo Credentials Info (Remove in production) -->
+        <!-- Demo Credentials Info -->
         <div class="demo-credentials">
-            <p>🔐 Demo Credentials (for testing):</p>
-            <code>admin@banashree.com</code> / <code>admin123</code><br>
-            <code>shopowner@example.com</code> / <code>owner123</code>
+            <p>🔐 Demo Credentials:</p>
+            <code>admin@banashree.com</code> / <code>admin123</code>
         </div>
         
         <!-- Info Box -->
@@ -371,7 +358,7 @@
             <p><strong>ℹ️ Note:</strong></p>
             <ul>
                 <li>This area is for authorized personnel only</li>
-                <li>You can manage: Products, Categories, Images</li>
+                <li>You can manage: Products, Categories</li>
                 <li>All changes reflect immediately on website</li>
             </ul>
         </div>
@@ -385,14 +372,9 @@
     </div>
 
     <script type="module">
-        // ===== 1. IMPORT FIREBASE AUTH FUNCTIONS =====
-        import { 
-            auth,
-            signInWithEmailAndPassword,
-            onAuthStateChanged
-        } from '../js/admin/firebase.js';
-        
-        import { adminLogin } from '../js/admin/admin-auth.js';
+        // ===== 1. IMPORTS (GitHub API Version) =====
+        import { adminLogin } from '../js/admin/github-auth.js';
+        import { CONFIG, Helpers } from '../js/admin/github-config.js';
         
         // ===== 2. DOM ELEMENTS =====
         const loginForm = document.getElementById('loginForm');
@@ -403,16 +385,13 @@
         const successDiv = document.getElementById('successMessage');
         const rememberMe = document.getElementById('rememberMe');
         
-        // ===== 3. CHECK IF ALREADY LOGGED IN =====
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // Already logged in, redirect to dashboard
-                showSuccess('Already logged in! Redirecting...');
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1000);
-            }
-        });
+        // ===== 3. CHECK IF ALREADY LOGGED IN (using Helpers) =====
+        if (Helpers.isLoggedIn()) {
+            showSuccess('Already logged in! Redirecting...');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1000);
+        }
         
         // ===== 4. LOAD SAVED EMAIL (if remember me was checked) =====
         function loadSavedEmail() {
@@ -608,7 +587,7 @@
             const email = document.getElementById('email').value.trim();
             
             if (email && email.includes('@')) {
-                alert(`Password reset link will be sent to ${email} (Demo feature)`);
+                alert(`Password reset link will be sent to ${email}. Please contact administrator.`);
             } else {
                 alert('Please enter your email address first');
                 document.getElementById('email').focus();

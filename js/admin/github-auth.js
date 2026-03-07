@@ -1,13 +1,13 @@
 /**
- * ADMIN-AUTH.JS - MONGODB AUTHENTICATION
+ * GITHUB-AUTH.JS - GitHub API Authentication
  * 
  * यह file admin panel के login/logout और
  * session management को handle करती है
- * MongoDB + Netlify Functions के साथ
+ * GitHub API + JWT के साथ
  */
 
 // ===== 1. IMPORTS =====
-import { CONFIG, Helpers, STORAGE_KEYS } from './admin-config.js';
+import { GITHUB_CONFIG, Helpers, STORAGE_KEYS } from './github-config.js';
 
 // ===== 2. CURRENT USER STATE =====
 let currentUser = null;
@@ -32,7 +32,7 @@ export async function adminLogin(email, password) {
     }
 
     // Netlify Function se login verify
-    const response = await fetch(CONFIG.API.auth(), {
+    const response = await fetch(GITHUB_CONFIG.API.auth(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -94,7 +94,7 @@ export async function adminLogout() {
     if (token) {
       // Optional: Call logout API to invalidate token on server
       try {
-        await fetch(CONFIG.API.auth(), {
+        await fetch(GITHUB_CONFIG.API.auth(), {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -172,7 +172,7 @@ async function verifyToken(userData) {
     const token = Helpers.getToken();
     if (!token) return false;
 
-    const response = await fetch(`${CONFIG.API.auth()}?verify=true`, {
+    const response = await fetch(`${GITHUB_CONFIG.API.auth()}?verify=true`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -271,16 +271,7 @@ function stopSessionMonitoring() {
   }
 }
 
-// ===== 12. UPDATE LAST ACTION =====
-/**
- * User activity par last action time update karta hai
- */
-export function updateLastAction() {
-  // Is function ki ab zaroorat nahi, but keep for compatibility
-  // We're using login time based session now
-}
-
-// ===== 13. GET CURRENT USER SYNC =====
+// ===== 12. GET CURRENT USER SYNC =====
 /**
  * Synchronously current user return karta hai (agar already loaded hai)
  */
@@ -288,7 +279,7 @@ export function getCurrentUserSync() {
   return currentUser || Helpers.getUserData();
 }
 
-// ===== 14. CHECK PERMISSION =====
+// ===== 13. CHECK PERMISSION =====
 /**
  * Check karta hai ki user ke paas specific permission hai ya nahi
  * @param {string} permission - Permission name
@@ -309,7 +300,7 @@ export function hasPermission(permission) {
   return userPermissions.includes(permission);
 }
 
-// ===== 15. INITIALIZE AUTH =====
+// ===== 14. INITIALIZE AUTH =====
 /**
  * Auth initialize karta hai and session timeout start karta hai
  */
@@ -331,7 +322,7 @@ export async function initAuth() {
   return currentUser;
 }
 
-// ===== 16. CHANGE PASSWORD (Optional) =====
+// ===== 15. CHANGE PASSWORD (Optional) =====
 /**
  * Admin password change karta hai
  * @param {string} currentPassword - Current password
@@ -342,7 +333,7 @@ export async function changePassword(currentPassword, newPassword) {
     const token = Helpers.getToken();
     if (!token) throw new Error('Not authenticated');
 
-    const response = await fetch(`${CONFIG.API.auth()}?changePassword=true`, {
+    const response = await fetch(`${GITHUB_CONFIG.API.auth()}?changePassword=true`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -374,7 +365,7 @@ export async function changePassword(currentPassword, newPassword) {
   }
 }
 
-// ===== 17. DEFAULT EXPORT =====
+// ===== 16. DEFAULT EXPORT =====
 export default {
   adminLogin,
   adminLogout,

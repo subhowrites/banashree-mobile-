@@ -1,7 +1,7 @@
 /**
  * AUTH.JS - Netlify Function
  * 
- * Admin authentication के लिए:
+ * Admin authentication के लिए GitHub-based auth:
  * - Login (JWT token generate)
  * - Logout (token invalidate)
  * - Verify token
@@ -11,14 +11,15 @@
  */
 
 // ===== 1. IMPORTS =====
-const { connectToDatabase, COLLECTIONS } = require('./utils/mongodb');
-const crypto = require('crypto');
+const { readFile, writeFile } = require('./utils/github-api');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 // ===== 2. CONFIGURATION =====
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-this-in-production';
 const JWT_EXPIRY = '24h'; // 24 hours
 const REFRESH_TOKEN_EXPIRY = '7d'; // 7 days
+const USERS_FILE_PATH = 'users.json'; // GitHub पर users.json file
 
 // ===== 3. CORS HEADERS =====
 const headers = {
@@ -37,7 +38,7 @@ function hashPassword(password) {
 // ===== 5. GENERATE JWT TOKEN =====
 function generateToken(user) {
     const payload = {
-        id: user._id.toString(),
+        id: user.id,
         email: user.email,
         role: user.role || 'admin',
         name: user.name || user.email.split('@')[0]
@@ -47,7 +48,7 @@ function generateToken(user) {
     
     // Generate refresh token
     const refreshToken = jwt.sign(
-        { id: user._id.toString(), type: 'refresh' },
+        { id: user.id, type: 'refresh' },
         JWT_SECRET,
         { expiresIn: REFRESH_TOKEN_EXPIRY }
     );
@@ -65,32 +66,60 @@ function verifyToken(token) {
     }
 }
 
-// ===== 7. CREATE ADMIN USER (FIRST TIME SETUP) =====
-async function createAdminUserIfNotExists(db) {
-    const usersCollection = db.collection(COLLECTIONS.USERS);
-    
-    // Check if admin already exists
-    const existingAdmin = await usersCollection.findOne({ role: 'admin' });
-    
-    if (!existingAdmin) {
-        // Create default admin
-        const defaultAdmin = {
-            email: 'admin@banashree.com',
-            passwordHash: hashPassword('admin123'),
-            name: 'Admin User',
-            role: 'admin',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            lastLogin: null,
-            isActive: true
-        };
+// ===== 7. GET USERS FROM GITHUB =====
+async function getUsers() {
+    try {
+        const usersFile = await readFile(USERS_FILE_PATH);
+        if (!usersFile) {
+            // Create default users file
+            const defaultUsers = [
+                {
+                    id: '1',
+                    email: 'admin@banashree.com',
+                    passwordHash: hashPassword('admin123'),
+                    name: 'Admin User',
+                    role: 'admin',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    lastLogin: null,
+                    isActive: true
+                }
+            ];
+            
+            await writeFile(
+                USERS_FILE_PATH, 
+                defaultUsers, 
+                null, 
+                'Initialize users.json with default admin'
+            );
+            
+            return defaultUsers;
+        }
         
-        await usersCollection.insertOne(defaultAdmin);
-        console.log('✅ Default admin user created');
+        return usersFile.content;
+    } catch (error) {
+        console.error('Error reading users file:', error);
+        return [];
     }
 }
 
-// ===== 8. LOGIN HANDLER =====
+// ===== 8. SAVE USERS TO GITHUB =====
+async function saveUsers(users, sha) {
+    try {
+        const result = await writeFile(
+            USERS_FILE_PATH,
+            users,
+            sha,
+            'Update users'
+        );
+        return result;
+    } catch (error) {
+        console.error('Error saving users:', error);
+        throw error;
+    }
+}
+
+// ===== 9. LOGIN HANDLER =====
 async function handleLogin(event) {
     try {
         const { email, password } = JSON.parse(event.body);
@@ -106,12 +135,13 @@ async function handleLogin(event) {
             };
         }
 
-        // Connect to database
-        const { db } = await connectToDatabase();
-        const usersCollection = db.collection(COLLECTIONS.USERS);
+        // Get users from GitHub
+        const users = await getUsers();
+        const usersFile = await readFile(USERS_FILE_PATH);
+        const fileSha = usersFile?.sha || null;
 
         // Find user by email
-        const user = await usersCollection.findOne({ email: email.toLowerCase() });
+        const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
         if (!user) {
             return {
@@ -147,15 +177,11 @@ async function handleLogin(event) {
         }
 
         // Update last login
-        await usersCollection.updateOne(
-            { _id: user._id },
-            { 
-                $set: { 
-                    lastLogin: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                } 
-            }
-        );
+        user.lastLogin = new Date().toISOString();
+        user.updatedAt = new Date().toISOString();
+        
+        // Save updated user data back to GitHub
+        await saveUsers(users, fileSha);
 
         // Generate tokens
         const { token, refreshToken, expiresIn } = generateToken(user);
@@ -172,7 +198,7 @@ async function handleLogin(event) {
                 refreshToken,
                 expiresIn,
                 user: {
-                    id: user._id.toString(),
+                    id: user.id,
                     email: user.email,
                     name: user.name || user.email.split('@')[0],
                     role: user.role
@@ -193,7 +219,7 @@ async function handleLogin(event) {
     }
 }
 
-// ===== 9. VERIFY TOKEN HANDLER =====
+// ===== 10. VERIFY TOKEN HANDLER =====
 async function handleVerify(event) {
     try {
         const authHeader = event.headers.authorization || event.headers.Authorization;
@@ -243,7 +269,7 @@ async function handleVerify(event) {
     }
 }
 
-// ===== 10. REFRESH TOKEN HANDLER =====
+// ===== 11. REFRESH TOKEN HANDLER =====
 async function handleRefresh(event) {
     try {
         const { refreshToken } = JSON.parse(event.body);
@@ -271,14 +297,11 @@ async function handleRefresh(event) {
             };
         }
 
-        // Connect to database
-        const { db } = await connectToDatabase();
-        const usersCollection = db.collection(COLLECTIONS.USERS);
-
+        // Get users from GitHub
+        const users = await getUsers();
+        
         // Find user
-        const user = await usersCollection.findOne({ 
-            _id: new (require('mongodb')).ObjectId(verification.decoded.id) 
-        });
+        const user = users.find(u => u.id === verification.decoded.id);
 
         if (!user) {
             return {
@@ -315,7 +338,7 @@ async function handleRefresh(event) {
     }
 }
 
-// ===== 11. CHANGE PASSWORD HANDLER =====
+// ===== 12. CHANGE PASSWORD HANDLER =====
 async function handleChangePassword(event) {
     try {
         // Verify token first
@@ -357,14 +380,13 @@ async function handleChangePassword(event) {
             };
         }
 
-        // Connect to database
-        const { db } = await connectToDatabase();
-        const usersCollection = db.collection(COLLECTIONS.USERS);
+        // Get users from GitHub
+        const users = await getUsers();
+        const usersFile = await readFile(USERS_FILE_PATH);
+        const fileSha = usersFile?.sha || null;
 
         // Find user
-        const user = await usersCollection.findOne({ 
-            _id: new (require('mongodb')).ObjectId(verification.decoded.id) 
-        });
+        const user = users.find(u => u.id === verification.decoded.id);
 
         if (!user) {
             return {
@@ -389,16 +411,11 @@ async function handleChangePassword(event) {
         }
 
         // Update password
-        const newPasswordHash = hashPassword(newPassword);
-        await usersCollection.updateOne(
-            { _id: user._id },
-            { 
-                $set: { 
-                    passwordHash: newPasswordHash,
-                    updatedAt: new Date().toISOString()
-                } 
-            }
-        );
+        user.passwordHash = hashPassword(newPassword);
+        user.updatedAt = new Date().toISOString();
+        
+        // Save updated users back to GitHub
+        await saveUsers(users, fileSha);
 
         return {
             statusCode: 200,
@@ -420,7 +437,7 @@ async function handleChangePassword(event) {
     }
 }
 
-// ===== 12. LOGOUT HANDLER =====
+// ===== 13. LOGOUT HANDLER =====
 async function handleLogout(event) {
     try {
         // In a real implementation, you might want to blacklist the token
@@ -446,7 +463,7 @@ async function handleLogout(event) {
     }
 }
 
-// ===== 13. MAIN HANDLER =====
+// ===== 14. MAIN HANDLER =====
 exports.handler = async (event) => {
     console.log('🔐 auth function invoked');
     console.log('HTTP Method:', event.httpMethod);
@@ -462,10 +479,6 @@ exports.handler = async (event) => {
     }
 
     try {
-        // Connect to database and ensure admin user exists (for first time)
-        const { db } = await connectToDatabase();
-        await createAdminUserIfNotExists(db);
-
         // Route based on HTTP method and query parameters
         const params = event.queryStringParameters || {};
 

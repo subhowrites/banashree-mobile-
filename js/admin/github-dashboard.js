@@ -1,19 +1,19 @@
 /**
- * ADMIN-DASHBOARD.JS - MONGODB VERSION
+ * GITHUB-DASHBOARD.JS - GITHUB API VERSION
  * 
  * यह file admin panel के dashboard को handle करती है:
- * - Products list display (from MongoDB)
- * - Add new product (via API)
- * - Delete product (via API)
- * - Edit product (via API)
+ * - Products list display (from GitHub)
+ * - Add new product (via GitHub API)
+ * - Delete product (via GitHub API)
+ * - Edit product (via GitHub API)
  */
 
 // ===== 1. IMPORTS =====
 import { 
-  CONFIG, 
+  GITHUB_CONFIG, 
   Helpers,
   STORAGE_KEYS 
-} from './admin-config.js';
+} from './github-config.js';
 
 import { 
   requireAuth, 
@@ -21,17 +21,18 @@ import {
   onAuthChange,
   hasPermission,
   getCurrentUserSync
-} from './admin-auth.js';
+} from './github-auth.js';
 
 // ===== 2. GLOBAL VARIABLES =====
 let currentProducts = [];
 let imageFile = null;
 let editMode = false;
 let editingProductId = null;
+let editingProductSha = null; // GitHub ke liye SHA chahiye update/delete ke liye
 
 // ===== 3. API HELPER =====
 async function apiCall(endpoint, method = 'GET', data = null, isFormData = false) {
-  const url = CONFIG.API[endpoint] ? CONFIG.API[endpoint]() : `${CONFIG.API.getBaseUrl()}/${endpoint}`;
+  const url = GITHUB_CONFIG.API[endpoint] ? GITHUB_CONFIG.API[endpoint]() : `${GITHUB_CONFIG.API.getBaseUrl()}/${endpoint}`;
   
   const options = {
     method,
@@ -70,7 +71,7 @@ async function apiCall(endpoint, method = 'GET', data = null, isFormData = false
 
 // ===== 4. INITIALIZE DASHBOARD =====
 export async function initDashboard() {
-  console.log('🚀 Initializing admin dashboard with MongoDB...');
+  console.log('🚀 Initializing admin dashboard with GitHub API...');
   
   // Check authentication
   const user = await requireAuth();
@@ -131,20 +132,20 @@ function updatePermissionsUI() {
   }
 }
 
-// ===== 7. LOAD PRODUCTS FROM MONGODB =====
+// ===== 7. LOAD PRODUCTS FROM GITHUB =====
 export async function loadProducts() {
   const productListDiv = document.getElementById('productList');
   if (!productListDiv) return;
   
   try {
-    productListDiv.innerHTML = '<div class="loading">Loading products from MongoDB...</div>';
+    productListDiv.innerHTML = '<div class="loading">Loading products from GitHub...</div>';
     
     // Call Netlify function to get products
     const data = await apiCall('getProducts');
     
     currentProducts = data.products || data || [];
     
-    console.log(`📦 Loaded ${currentProducts.length} products from MongoDB`);
+    console.log(`📦 Loaded ${currentProducts.length} products from GitHub`);
     
     // Render products
     renderProductList();
@@ -206,11 +207,12 @@ function renderProductList() {
     const discount = variant.discount || 0;
     const finalPrice = discount > 0 ? Math.round(price * (1 - discount/100)) : price;
     
-    // Get product ID (MongoDB _id)
-    const productId = product._id || product.id;
+    // Get product ID and SHA
+    const productId = product._id || product.id || product.name?.toLowerCase().replace(/\s+/g, '-');
+    const sha = product.sha || '';
     
     html += `
-      <div class="product-card-admin" data-id="${productId}">
+      <div class="product-card-admin" data-id="${productId}" data-sha="${sha}">
         <div class="product-image-admin">
           <img src="${product.image || 'https://via.placeholder.com/200x200?text=No+Image'}" 
                alt="${product.name}" 
@@ -228,12 +230,12 @@ function renderProductList() {
           </p>
           ${discount > 0 ? `<span class="product-discount">${discount}% OFF</span>` : ''}
           <p class="product-id" style="font-size: 11px; color: #999; margin-top: 5px;">
-            ID: ${productId.substring(0, 8)}...
+            SHA: ${sha ? sha.substring(0, 7) + '...' : 'New'}
           </p>
         </div>
         <div class="product-actions-admin">
-          ${hasPermission('edit') ? `<button class="edit-btn" onclick="window.editProduct('${productId}')"><i class="fas fa-edit"></i> Edit</button>` : ''}
-          ${hasPermission('delete') ? `<button class="delete-btn" onclick="window.deleteProduct('${productId}')"><i class="fas fa-trash"></i> Delete</button>` : ''}
+          ${hasPermission('edit') ? `<button class="edit-btn" onclick="window.editProduct('${productId}', '${sha}')"><i class="fas fa-edit"></i> Edit</button>` : ''}
+          ${hasPermission('delete') ? `<button class="delete-btn" onclick="window.deleteProduct('${productId}', '${sha}')"><i class="fas fa-trash"></i> Delete</button>` : ''}
         </div>
       </div>
     `;
@@ -245,7 +247,7 @@ function renderProductList() {
   html += `
     <div class="stats-admin">
       <p><i class="fas fa-database"></i> Total Products: <strong>${currentProducts.length}</strong></p>
-      <p><i class="fas fa-tags"></i> Source: <strong>MongoDB Atlas</strong></p>
+      <p><i class="fas fa-code-branch"></i> Source: <strong>GitHub API</strong></p>
     </div>
   `;
   
@@ -328,7 +330,7 @@ function setupImagePreview() {
     // Drag & drop
     uploadArea.addEventListener('dragover', (e) => {
       e.preventDefault();
-      uploadArea.style.borderColor = CONFIG.COLORS?.primary || '#667eea';
+      uploadArea.style.borderColor = GITHUB_CONFIG.COLORS?.primary || '#667eea';
       uploadArea.style.background = '#f7fafc';
     });
     
@@ -455,11 +457,15 @@ async function handleAddProduct(e) {
       imageUrl = `https://via.placeholder.com/400x400?text=${encodeURIComponent(formData.name)}`;
     }
     
+    // Create product ID from name
+    const productId = formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    
     // Create variant ID
     const variantId = `${formData.storage.replace(/\s/g, '')}-${formData.ram.replace(/\s/g, '')}`;
     
     // Create product object
     const productData = {
+      id: productId,
       name: formData.name,
       brand: formData.brand,
       category: formData.category,
@@ -496,6 +502,7 @@ async function handleAddProduct(e) {
       // Update existing product
       result = await apiCall('updateProduct', 'PUT', {
         id: editingProductId,
+        sha: editingProductSha,
         ...productData
       });
     } else {
@@ -519,7 +526,7 @@ async function handleAddProduct(e) {
 }
 
 // ===== 16. DELETE PRODUCT =====
-export async function deleteProduct(productId) {
+export async function deleteProduct(productId, sha) {
   // Check permission
   if (!hasPermission('delete')) {
     alert('You do not have permission to delete products');
@@ -535,7 +542,7 @@ export async function deleteProduct(productId) {
   }
   
   try {
-    await apiCall('deleteProduct', 'DELETE', { id: productId });
+    await apiCall('deleteProduct', 'DELETE', { id: productId, sha: sha });
     
     // Reload products
     await loadProducts();
@@ -554,18 +561,19 @@ export async function deleteProduct(productId) {
 }
 
 // ===== 17. EDIT PRODUCT =====
-export async function editProduct(productId) {
+export async function editProduct(productId, sha) {
   // Check permission
   if (!hasPermission('edit')) {
     alert('You do not have permission to edit products');
     return;
   }
   
-  const product = currentProducts.find(p => (p._id === productId || p.id === productId));
+  const product = currentProducts.find(p => (p.id === productId || p._id === productId));
   if (!product) return;
   
   editMode = true;
   editingProductId = productId;
+  editingProductSha = sha;
   
   // Fill form with product data
   document.getElementById('productName').value = product.name || '';
@@ -624,6 +632,7 @@ function resetForm() {
   imageFile = null;
   editMode = false;
   editingProductId = null;
+  editingProductSha = null;
   
   const formTitle = document.getElementById('formTitle');
   if (formTitle) formTitle.textContent = 'Add New Product';

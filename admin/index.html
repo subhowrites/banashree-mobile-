@@ -5,19 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Banashree Mobile</title>
     
-    <!-- Import Map for Firebase (required) -->
-    <script type="importmap">
-        {
-            "imports": {
-                "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
-                "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
-                "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js",
-                "firebase/storage": "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js"
-            }
-        }
-    </script>
-    
-    <!-- Font Awesome for icons (optional) -->
+    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <!-- Admin CSS -->
@@ -959,7 +947,7 @@
             <div class="products-header">
                 <h2>
                     <i class="fas fa-list" style="color: #667eea;"></i>
-                    Firebase Products
+                    Products
                 </h2>
                 
                 <div class="search-box">
@@ -996,14 +984,10 @@
     </div>
 
     <script type="module">
-        // ===== 1. IMPORTS =====
-        import { initDashboard } from '../js/admin/admin-dashboard.js';
-        import { 
-            auth, 
-            onAuthStateChanged,
-            signOut 
-        } from '../js/admin/firebase.js';
-        import { hasPermission } from '../js/admin/admin-auth.js';
+        // ===== 1. IMPORTS (GitHub API Version) =====
+        import { initDashboard } from '../js/admin/github-dashboard.js';
+        import { requireAuth, adminLogout, getCurrentUserSync } from '../js/admin/github-auth.js';
+        import { Helpers } from '../js/admin/github-config.js';
         
         // ===== 2. DOM ELEMENTS =====
         const userNameSpan = document.getElementById('userName');
@@ -1016,22 +1000,19 @@
         const searchBtn = document.getElementById('searchBtn');
         
         // ===== 3. CHECK AUTH STATE =====
-        onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                // Not logged in, redirect to login
-                window.location.href = 'login.html';
-            } else {
-                // Update UI with user info
+        async function checkAuth() {
+            const user = await requireAuth();
+            if (user) {
                 updateUserInfo(user);
-                
-                // Initialize dashboard
                 initDashboard();
             }
-        });
+        }
+        
+        checkAuth();
         
         // ===== 4. UPDATE USER INFO =====
         function updateUserInfo(user) {
-            const name = user.email.split('@')[0];
+            const name = user.name || user.email.split('@')[0];
             const displayName = name.charAt(0).toUpperCase() + name.slice(1);
             
             userNameSpan.textContent = displayName;
@@ -1043,11 +1024,15 @@
         // ===== 5. LOGOUT HANDLER =====
         logoutBtn.addEventListener('click', async () => {
             try {
-                await signOut(auth);
-                showToast('Logged out successfully', 'success');
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 1000);
+                const result = await adminLogout();
+                if (result.success) {
+                    showToast('Logged out successfully', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 1000);
+                } else {
+                    showToast(result.message, 'error');
+                }
             } catch (error) {
                 showToast('Error logging out: ' + error.message, 'error');
             }

@@ -1,51 +1,74 @@
 /**
- * DATA-LOADER.JS - COMPLETE FIXED VERSION WITH FIREBASE SUPPORT
- * Phones: phone-products folder
- * Other products: products folder
- * Firebase products: Firestore database
+ * DATA-LOADER.JS - COMPLETE FIXED VERSION WITH GITHUB API SUPPORT
+ * Phones: phone-products folder in GitHub
+ * Other products: products folder in GitHub
+ * All data from GitHub API (no MongoDB)
  */
 
-// ===== 1. FIREBASE IMPORTS (के लिए setup) =====
-let firebaseModule = null;
-let firebaseProductsCache = [];
-
-// ===== 2. TRY TO LOAD FIREBASE (अगर available हो) =====
-async function getFirebaseProducts() {
-    // Agar already loaded hai to cache se do
-    if (firebaseProductsCache.length > 0) {
-        return firebaseProductsCache;
-    }
-    
+// ===== 1. GITHUB API FUNCTIONS =====
+async function fetchGitHubProducts() {
     try {
-        // Dynamic import - agar Firebase available ho to load karo
-        if (!firebaseModule) {
-            firebaseModule = await import('./admin/firebase.js');
+        // Determine API URL based on environment
+        const baseUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? 'http://localhost:8888/.netlify/functions'
+            : '/.netlify/functions';
+        
+        // Get all products
+        const response = await fetch(`${baseUrl}/get-products`);
+        
+        if (!response.ok) {
+            console.warn('GitHub API not available:', response.status);
+            return [];
         }
         
-        const { db, collection, getDocs } = firebaseModule;
-        
-        console.log('🔥 Loading products from Firebase...');
-        const products = [];
-        const querySnapshot = await getDocs(collection(db, "products"));
-        
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            products.push({
-                ...data,
-                id: doc.id,
-                source: 'firebase',
-                // Ensure category exists
-                category: data.category || 'Uncategorized'
-            });
-        });
-        
-        console.log(`📦 Loaded ${products.length} products from Firebase`);
-        firebaseProductsCache = products;
-        return products;
+        const data = await response.json();
+        return data.data || data.products || data || [];
         
     } catch (error) {
-        console.warn('Firebase not available or error:', error.message);
+        console.warn('Error fetching GitHub products:', error.message);
         return [];
+    }
+}
+
+async function fetchGitHubProductsByCategory(category) {
+    try {
+        const baseUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? 'http://localhost:8888/.netlify/functions'
+            : '/.netlify/functions';
+        
+        const response = await fetch(`${baseUrl}/get-products?category=${encodeURIComponent(category)}`);
+        
+        if (!response.ok) {
+            return [];
+        }
+        
+        const data = await response.json();
+        return data.data || data.products || data || [];
+        
+    } catch (error) {
+        console.warn(`Error fetching ${category} products:`, error.message);
+        return [];
+    }
+}
+
+async function fetchGitHubJsonFile(type) {
+    try {
+        const baseUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? 'http://localhost:8888/.netlify/functions'
+            : '/.netlify/functions';
+        
+        const response = await fetch(`${baseUrl}/get-products?type=${encodeURIComponent(type)}`);
+        
+        if (!response.ok) {
+            return null;
+        }
+        
+        const data = await response.json();
+        return data.data || data.products || data || [];
+        
+    } catch (error) {
+        console.warn(`Error fetching ${type}:`, error.message);
+        return null;
     }
 }
 
@@ -54,6 +77,13 @@ const DataLoader = {
     
     async loadCategories() {
         try {
+            // First try GitHub API
+            const githubCategories = await fetchGitHubJsonFile('categories');
+            if (githubCategories && githubCategories.length > 0) {
+                return githubCategories;
+            }
+            
+            // Fallback to local JSON
             const response = await fetch(this.basePath + 'categories.json');
             return await response.json();
         } catch (error) {
@@ -64,6 +94,13 @@ const DataLoader = {
     
     async loadTrending() {
         try {
+            // First try GitHub API
+            const githubTrending = await fetchGitHubJsonFile('trending');
+            if (githubTrending && githubTrending.length > 0) {
+                return githubTrending;
+            }
+            
+            // Fallback to local JSON
             const response = await fetch(this.basePath + 'trending.json');
             return await response.json();
         } catch (error) {
@@ -74,6 +111,13 @@ const DataLoader = {
     
     async loadNewLaunch() {
         try {
+            // First try GitHub API
+            const githubNewLaunch = await fetchGitHubJsonFile('new-launch');
+            if (githubNewLaunch && githubNewLaunch.length > 0) {
+                return githubNewLaunch;
+            }
+            
+            // Fallback to local JSON
             const response = await fetch(this.basePath + 'new-launch.json');
             return await response.json();
         } catch (error) {
@@ -84,6 +128,13 @@ const DataLoader = {
     
     async loadPagination() {
         try {
+            // First try GitHub API
+            const githubPagination = await fetchGitHubJsonFile('pagination');
+            if (githubPagination) {
+                return githubPagination;
+            }
+            
+            // Fallback to local JSON
             const response = await fetch(this.basePath + 'pagination.json');
             return await response.json();
         } catch (error) {
@@ -92,7 +143,24 @@ const DataLoader = {
         }
     },
     
-    // ===== PHONE PRODUCTS IDs (phone-products folder) =====
+    async loadCategoryBox() {
+        try {
+            // First try GitHub API
+            const githubCategoryBox = await fetchGitHubJsonFile('category-box');
+            if (githubCategoryBox && githubCategoryBox.length > 0) {
+                return githubCategoryBox;
+            }
+            
+            // Fallback to local JSON
+            const response = await fetch(this.basePath + 'category-box.json');
+            return await response.json();
+        } catch (error) {
+            console.error('Error loading category box:', error);
+            return [];
+        }
+    },
+    
+    // ===== PHONE PRODUCTS IDs (local fallback) =====
     async loadPhoneProductIds() {
         return [
             // Mobiles
@@ -110,7 +178,7 @@ const DataLoader = {
         ];
     },
     
-    // ===== OTHER PRODUCTS IDs (products folder) =====
+    // ===== OTHER PRODUCTS IDs (local fallback) =====
     async loadOtherProductIds() {
         return [
             // TVs
@@ -156,7 +224,7 @@ const DataLoader = {
         ];
     },
     
-    // ===== LOAD PRODUCT FROM SPECIFIC FOLDER =====
+    // ===== LOAD PRODUCT FROM SPECIFIC FOLDER (local fallback) =====
     async loadProductFromFolder(productId, folder) {
         try {
             const response = await fetch(`${this.basePath}${folder}/${productId}.json`);
@@ -174,17 +242,23 @@ const DataLoader = {
     
     // ===== LOAD PRODUCT (AUTO-DETECT FOLDER) =====
     async loadProduct(productId) {
-        // Pehle phone-products folder mein dhundo
+        // First try GitHub API
+        try {
+            const allProducts = await fetchGitHubProducts();
+            const product = allProducts.find(p => p.id === productId || p._id === productId);
+            if (product) {
+                product.source = 'github';
+                return product;
+            }
+        } catch (error) {
+            console.warn('GitHub product fetch failed, trying local JSON...');
+        }
+        
+        // Fallback to local JSON
         let product = await this.loadProductFromFolder(productId, 'phone-products');
         if (product) return product;
         
-        // Nahi mila to products folder mein dhundo
         product = await this.loadProductFromFolder(productId, 'products');
-        if (product) return product;
-        
-        // Firebase mein dhundo
-        const firebaseProducts = await getFirebaseProducts();
-        product = firebaseProducts.find(p => p.id === productId);
         if (product) return product;
         
         console.warn(`Product ${productId} not found in any source`);
@@ -200,36 +274,64 @@ const DataLoader = {
     
     // ===== LOAD ALL PHONES (for homepage & products page) =====
     async loadAllPhones() {
-        console.log('📱 Loading phones from phone-products folder...');
+        console.log('📱 Loading phones from GitHub API...');
+        
+        // Get all products from GitHub
+        const allGitHub = await fetchGitHubProducts();
+        
+        // Filter phones
+        const phoneCategories = ['iPhone', 'Samsung', 'Vivo', 'Oppo', 'Redmi', 'OnePlus', 'Nothing'];
+        const githubPhones = allGitHub.filter(p => 
+            phoneCategories.includes(p.category) || phoneCategories.includes(p.brand)
+        );
+        
+        // Also try local JSON as fallback
         const phoneIds = await this.loadPhoneProductIds();
         const jsonPhones = await this.loadProducts(phoneIds);
         
-        // Firebase से भी phones लोड करो
-        const allFirebase = await getFirebaseProducts();
-        const firebasePhones = allFirebase.filter(p => 
-            ['iPhone', 'Samsung', 'Vivo', 'Oppo', 'Redmi', 'OnePlus', 'Nothing'].includes(p.category)
-        );
+        // Merge (GitHub takes priority, but avoid duplicates)
+        const allPhones = [...githubPhones];
         
-        const allPhones = [...jsonPhones, ...firebasePhones];
-        console.log(`📱 Total phones: ${allPhones.length} (JSON: ${jsonPhones.length}, Firebase: ${firebasePhones.length})`);
+        // Add JSON phones that aren't already in GitHub
+        jsonPhones.forEach(jsonPhone => {
+            if (!allPhones.some(p => p.id === jsonPhone.id || p.name === jsonPhone.name)) {
+                allPhones.push(jsonPhone);
+            }
+        });
+        
+        console.log(`📱 Total phones: ${allPhones.length} (GitHub: ${githubPhones.length}, JSON: ${jsonPhones.length})`);
         
         return allPhones;
     },
     
     // ===== LOAD ALL OTHER PRODUCTS =====
     async loadAllOtherProducts() {
-        console.log('📺 Loading other products from products folder...');
+        console.log('📺 Loading other products from GitHub API...');
+        
+        // Get all products from GitHub
+        const allGitHub = await fetchGitHubProducts();
+        
+        // Filter non-phone products
+        const phoneCategories = ['iPhone', 'Samsung', 'Vivo', 'Oppo', 'Redmi', 'OnePlus', 'Nothing'];
+        const githubOthers = allGitHub.filter(p => 
+            !phoneCategories.includes(p.category) && !phoneCategories.includes(p.brand)
+        );
+        
+        // Also try local JSON as fallback
         const otherIds = await this.loadOtherProductIds();
         const jsonOthers = await this.loadProducts(otherIds);
         
-        // Firebase से भी other products लोड करो
-        const allFirebase = await getFirebaseProducts();
-        const firebaseOthers = allFirebase.filter(p => 
-            ['TV', 'AC', 'Earphones', 'Watch', 'Laptop', 'Tablet', 'Accessories'].includes(p.category)
-        );
+        // Merge (GitHub takes priority)
+        const allOthers = [...githubOthers];
         
-        const allOthers = [...jsonOthers, ...firebaseOthers];
-        console.log(`📺 Total other products: ${allOthers.length} (JSON: ${jsonOthers.length}, Firebase: ${firebaseOthers.length})`);
+        // Add JSON products that aren't already in GitHub
+        jsonOthers.forEach(jsonProduct => {
+            if (!allOthers.some(p => p.id === jsonProduct.id || p.name === jsonProduct.name)) {
+                allOthers.push(jsonProduct);
+            }
+        });
+        
+        console.log(`📺 Total other products: ${allOthers.length} (GitHub: ${githubOthers.length}, JSON: ${jsonOthers.length})`);
         
         return allOthers;
     },
@@ -239,18 +341,29 @@ const DataLoader = {
         const path = window.location.pathname;
         console.log('Loading all products for path:', path);
         
-        // Parallel mein sab load karo
-        const [jsonPhones, jsonOthers, firebaseProducts] = await Promise.all([
+        // Get all from GitHub first
+        const githubProducts = await fetchGitHubProducts();
+        
+        // Also get local JSON as fallback
+        const [jsonPhones, jsonOthers] = await Promise.all([
             this.loadProducts(await this.loadPhoneProductIds()),
-            this.loadProducts(await this.loadOtherProductIds()),
-            getFirebaseProducts()
+            this.loadProducts(await this.loadOtherProductIds())
         ]);
         
-        const allProducts = [...jsonPhones, ...jsonOthers, ...firebaseProducts];
+        // Merge (GitHub takes priority)
+        const allProducts = [...githubProducts];
+        
+        // Add JSON products that aren't already in GitHub
+        [...jsonPhones, ...jsonOthers].forEach(jsonProduct => {
+            if (!allProducts.some(p => p.id === jsonProduct.id || p.name === jsonProduct.name)) {
+                allProducts.push(jsonProduct);
+            }
+        });
+        
         console.log(`📊 Total products loaded: ${allProducts.length}`);
+        console.log(`   🔥 GitHub: ${githubProducts.length}`);
         console.log(`   📱 JSON Phones: ${jsonPhones.length}`);
         console.log(`   📺 JSON Others: ${jsonOthers.length}`);
-        console.log(`   🔥 Firebase: ${firebaseProducts.length}`);
         
         return allProducts;
     },
@@ -278,30 +391,29 @@ const DataLoader = {
     async loadProductsByCategory(category) {
         console.log(`Loading products for category: ${category}`);
         
-        // ⭐ FIXED: Special handling for Trending
+        // First try GitHub API with category filter
+        const githubProducts = await fetchGitHubProductsByCategory(category);
+        
+        // Special handling for Trending
         if (category === 'Trending') {
             const trendingIds = await this.loadTrending();
-            console.log('Trending IDs:', trendingIds);
             const jsonProducts = await this.loadProducts(trendingIds);
             
-            // Firebase से भी trending products लोड करो (अगर trending tagged हों)
-            const firebaseProducts = await getFirebaseProducts();
-            const firebaseTrending = firebaseProducts.filter(p => p.tags?.includes('trending'));
+            // GitHub से भी trending products लोड करो (अगर trending tagged हों)
+            const githubTrending = githubProducts.filter(p => p.tags?.includes('trending'));
             
-            return [...jsonProducts, ...firebaseTrending];
+            return [...githubTrending, ...jsonProducts];
         }
         
-        // ⭐ FIXED: Special handling for New Launch
+        // Special handling for New Launch
         if (category === 'New Launch') {
             const newLaunchIds = await this.loadNewLaunch();
-            console.log('New Launch IDs:', newLaunchIds);
             const jsonProducts = await this.loadProducts(newLaunchIds);
             
-            // Firebase से भी new launch products लोड करो (अगर new tagged हों)
-            const firebaseProducts = await getFirebaseProducts();
-            const firebaseNew = firebaseProducts.filter(p => p.tags?.includes('new'));
+            // GitHub से भी new launch products लोड करो (अगर new tagged हों)
+            const githubNew = githubProducts.filter(p => p.tags?.includes('new'));
             
-            return [...jsonProducts, ...firebaseNew];
+            return [...githubNew, ...jsonProducts];
         }
         
         // For brand categories (iPhone, Samsung, Vivo, etc.)
@@ -311,15 +423,8 @@ const DataLoader = {
             return allPhones.filter(p => p.category === category || p.brand === category);
         }
         
-        // For other categories (TV, AC, etc.)
-        const allOthers = await this.loadAllOtherProducts();
-        const jsonFiltered = allOthers.filter(p => p.category === category);
-        
-        // Firebase products भी include करो
-        const firebaseProducts = await getFirebaseProducts();
-        const firebaseFiltered = firebaseProducts.filter(p => p.category === category);
-        
-        return [...jsonFiltered, ...firebaseFiltered];
+        // For other categories (TV, AC, etc.) - use GitHub results
+        return githubProducts;
     },
     
     // ===== SEARCH PRODUCTS =====
@@ -336,16 +441,10 @@ const DataLoader = {
         });
     },
     
-    // ===== CLEAR FIREBASE CACHE (admin panel ke liye) =====
-    clearFirebaseCache() {
-        firebaseProductsCache = [];
-        console.log('Firebase cache cleared');
-    },
-    
-    // ===== REFRESH FIREBASE PRODUCTS =====
-    async refreshFirebaseProducts() {
-        this.clearFirebaseCache();
-        return getFirebaseProducts();
+    // ===== REFRESH GITHUB CACHE =====
+    clearCache() {
+        // No cache in this version, but function kept for compatibility
+        console.log('Cache cleared (if any)');
     }
 };
 

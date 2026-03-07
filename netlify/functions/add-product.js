@@ -1,13 +1,17 @@
 /**
- * ADDPRODUCT.JS - Netlify Function
+ * ADD-PRODUCT.JS - Netlify Function
  * 
- * MongoDB में नया product add करता है
- * API Endpoint: /.netlify/functions/addProduct
+ * GitHub repository में नया product add करता है
+ * API Endpoint: /.netlify/functions/add-product
  */
 
 // ===== 1. IMPORTS =====
-const { connectToDatabase, COLLECTIONS } = require('./utils/mongodb');
-const crypto = require('crypto');
+const { 
+    writeFile, 
+    getProductPath,
+    fileExists,
+    handleGitHubError 
+} = require('./utils/github-api');
 
 // ===== 2. CORS HEADERS =====
 const headers = {
@@ -17,7 +21,20 @@ const headers = {
     'Content-Type': 'application/json'
 };
 
-// ===== 3. VALIDATION FUNCTION =====
+// ===== 3. AUTHENTICATION CHECK =====
+function isAuthorized(event) {
+    const authHeader = event.headers.authorization || event.headers.Authorization;
+    
+    if (!authHeader) return false;
+    
+    const token = authHeader.replace('Bearer ', '');
+    
+    // In production, you would verify JWT token here
+    // For now, just check if token exists
+    return token && token.length > 10;
+}
+
+// ===== 4. VALIDATE PRODUCT DATA =====
 function validateProduct(data) {
     const errors = [];
 
@@ -27,23 +44,25 @@ function validateProduct(data) {
     if (!data.category) errors.push('Category is required');
     
     // Price validation
-    if (!data.price && data.price !== 0) {
+    if (data.price === undefined || data.price === null) {
         errors.push('Price is required');
     } else if (isNaN(data.price) || data.price < 0) {
         errors.push('Price must be a positive number');
     }
 
     // Discount validation
-    if (data.discount) {
+    if (data.discount !== undefined && data.discount !== null) {
         if (isNaN(data.discount) || data.discount < 0 || data.discount > 100) {
             errors.push('Discount must be between 0 and 100');
         }
     }
 
-    // RAM and Storage validation
+    // RAM validation
     if (data.ram && typeof data.ram !== 'string') {
         errors.push('RAM must be a string (e.g., "8 GB")');
     }
+    
+    // Storage validation
     if (data.storage && typeof data.storage !== 'string') {
         errors.push('Storage must be a string (e.g., "128 GB")');
     }
@@ -51,21 +70,33 @@ function validateProduct(data) {
     return errors;
 }
 
-// ===== 4. GENERATE VARIANT ID =====
+// ===== 5. GENERATE PRODUCT ID =====
+function generateProductId(name) {
+    return name
+        .toLowerCase()
+        .replace(/\s+/g, '-')           // spaces to hyphens
+        .replace(/[^a-z0-9-]/g, '')      // remove special characters
+        .replace(/-+/g, '-')              // multiple hyphens to single
+        .replace(/^-|-$/g, '');           // trim hyphens from ends
+}
+
+// ===== 6. GENERATE VARIANT ID =====
 function generateVariantId(storage, ram) {
     const storageClean = storage.replace(/\s+/g, '');
     const ramClean = ram.replace(/\s+/g, '');
     return `${storageClean}-${ramClean}`;
 }
 
-// ===== 5. CREATE PRODUCT OBJECT =====
+// ===== 7. CREATE PRODUCT OBJECT =====
 function createProductObject(data) {
+    const productId = data.id || generateProductId(data.name);
     const variantId = generateVariantId(
-        data.storage || '128 GB',
-        data.ram || '8 GB'
+        data.storage || '128GB',
+        data.ram || '8GB'
     );
 
     const product = {
+        id: productId,
         name: data.name,
         brand: data.brand,
         category: data.category,
@@ -99,24 +130,9 @@ function createProductObject(data) {
     return product;
 }
 
-// ===== 6. AUTHENTICATION CHECK =====
-function isAuthorized(event) {
-    const authHeader = event.headers.authorization || event.headers.Authorization;
-    
-    if (!authHeader) return false;
-    
-    // Check if it's a valid token (simplified)
-    // In production, use proper JWT verification
-    const token = authHeader.replace('Bearer ', '');
-    
-    // For now, just check if token exists
-    // You'll implement proper auth later
-    return token && token.length > 0;
-}
-
-// ===== 7. MAIN HANDLER =====
+// ===== 8. MAIN HANDLER =====
 exports.handler = async (event) => {
-    console.log('📝 addProduct function invoked');
+    console.log('📝 add-product function invoked');
 
     // Handle preflight OPTIONS request
     if (event.httpMethod === 'OPTIONS') {
@@ -139,7 +155,7 @@ exports.handler = async (event) => {
         };
     }
 
-    // ===== 8. AUTHENTICATION CHECK =====
+    // ===== 9. AUTHENTICATION CHECK =====
     if (!isAuthorized(event)) {
         return {
             statusCode: 401,
@@ -152,7 +168,7 @@ exports.handler = async (event) => {
     }
 
     try {
-        // ===== 9. PARSE REQUEST BODY =====
+        // ===== 10. PARSE REQUEST BODY =====
         let productData;
         try {
             productData = JSON.parse(event.body);
@@ -169,7 +185,7 @@ exports.handler = async (event) => {
 
         console.log('Received product data:', JSON.stringify(productData, null, 2));
 
-        // ===== 10. VALIDATE PRODUCT DATA =====
+        // ===== 11. VALIDATE PRODUCT DATA =====
         const validationErrors = validateProduct(productData);
         if (validationErrors.length > 0) {
             return {
@@ -183,37 +199,40 @@ exports.handler = async (event) => {
             };
         }
 
-        // ===== 11. CONNECT TO DATABASE =====
-        const { db } = await connectToDatabase();
-        const collection = db.collection(COLLECTIONS.PRODUCTS);
+        // ===== 12. CREATE PRODUCT OBJECT =====
+        const newProduct = createProductObject(productData);
 
-        // ===== 12. CHECK FOR DUPLICATE (OPTIONAL) =====
-        const existingProduct = await collection.findOne({
-            name: productData.name,
-            brand: productData.brand
-        });
+        // ===== 13. DETERMINE FILE PATH =====
+        const filePath = getProductPath(newProduct);
+        console.log(`📁 Target path: ${filePath}`);
 
-        if (existingProduct) {
+        // ===== 14. CHECK IF FILE ALREADY EXISTS =====
+        const exists = await fileExists(filePath);
+        if (exists) {
             return {
                 statusCode: 409,
                 headers,
                 body: JSON.stringify({
                     success: false,
-                    error: 'Product with same name and brand already exists',
-                    existingProductId: existingProduct._id.toString()
+                    error: 'Product already exists',
+                    path: filePath,
+                    message: `A product with ID ${newProduct.id} already exists. Use update instead.`
                 })
             };
         }
 
-        // ===== 13. CREATE PRODUCT OBJECT =====
-        const newProduct = createProductObject(productData);
+        // ===== 15. WRITE TO GITHUB =====
+        console.log(`💾 Writing product to GitHub: ${filePath}`);
+        const result = await writeFile(
+            filePath, 
+            newProduct, 
+            null, 
+            `Add product: ${newProduct.name}`
+        );
 
-        // ===== 14. INSERT INTO DATABASE =====
-        const result = await collection.insertOne(newProduct);
+        console.log(`✅ Product added successfully with SHA: ${result.sha}`);
 
-        console.log(`✅ Product added successfully with ID: ${result.insertedId}`);
-
-        // ===== 15. RETURN SUCCESS RESPONSE =====
+        // ===== 16. RETURN SUCCESS RESPONSE =====
         return {
             statusCode: 201,
             headers,
@@ -222,23 +241,29 @@ exports.handler = async (event) => {
                 message: 'Product added successfully',
                 product: {
                     ...newProduct,
-                    _id: result.insertedId.toString(),
-                    id: result.insertedId.toString()
+                    sha: result.sha,
+                    path: filePath,
+                    commit: {
+                        url: result.commit.html_url,
+                        message: result.commit.message
+                    }
                 }
             })
         };
 
     } catch (error) {
-        console.error('❌ Error in addProduct:', error);
-
-        // ===== 16. RETURN ERROR RESPONSE =====
+        console.error('❌ Error in add-product:', error);
+        
+        // ===== 17. HANDLE ERROR =====
+        const gitHubError = handleGitHubError(error);
+        
         return {
-            statusCode: 500,
+            statusCode: gitHubError.status || 500,
             headers,
             body: JSON.stringify({
                 success: false,
                 error: 'Failed to add product',
-                message: error.message,
+                message: gitHubError.message || error.message,
                 stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
             })
         };

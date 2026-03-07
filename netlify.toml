@@ -1,7 +1,7 @@
-# netlify.toml - Netlify configuration file
+# netlify.toml - Netlify configuration file for GitHub API version
 
 [build]
-  # Build command (अगर कुछ build करना हो)
+  # Build command (no build required for static site)
   command = "echo 'No build required'"
   
   # Functions ka folder
@@ -11,10 +11,10 @@
   publish = "."
 
 [build.environment]
-  # Node.js version specify करो
+  # Node.js version for functions
   NODE_VERSION = "18"
 
-# Development settings
+# ===== DEVELOPMENT SETTINGS =====
 [dev]
   # Local development ke liye functions path
   functions = "netlify/functions"
@@ -22,17 +22,45 @@
   # Local development ke liye publish directory
   publish = "."
   
-  # Port (optional)
+  # Local development server port
   port = 8888
+  
+  # Auto-open browser on start
+  autoLaunch = true
 
-# Redirects - API calls ko functions par map करो
+# ===== REDIRECTS =====
+# API calls ko functions par map करो
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
   force = true
 
-# Headers - Security और CORS के लिए
+# Admin panel redirects
+[[redirects]]
+  from = "/admin"
+  to = "/admin/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin/login"
+  to = "/admin/login.html"
+  status = 200
+
+# Root redirects
+[[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
+
+# 404 fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 404
+
+# ===== HEADERS =====
+# Security headers for all pages
 [[headers]]
   for = "/*"
   [headers.values]
@@ -40,8 +68,9 @@
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
 
-# Admin panel ke liye special headers (optional)
+# Admin panel cache control (no cache)
 [[headers]]
   for = "/admin/*"
   [headers.values]
@@ -49,10 +78,35 @@
     Pragma = "no-cache"
     Expires = "0"
 
-# Functions ke liye headers
+# Functions ke liye CORS headers
 [[headers]]
   for = "/.netlify/functions/*"
   [headers.values]
     Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Methods = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
     Access-Control-Allow-Headers = "Content-Type, Authorization"
+    Access-Control-Max-Age = "86400"
+
+# ===== FUNCTIONS CONFIGURATION =====
+# Individual function settings can be specified here if needed
+# Example:
+# [functions.get-products]
+#   timeout = 30
+#   memory = 1024
+
+# ===== CACHING =====
+# Static assets caching
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
