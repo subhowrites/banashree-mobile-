@@ -1,1 +1,35 @@
-
+[
+  {
+    "id": "1",
+    "email": "admin@banashree.com",
+    "passwordHash": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
+    "name": "Admin User",
+    "role": "admin",
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z",
+    "lastLogin": null,
+    "isActive": true
+  },
+  {
+    "id": "2",
+    "email": "manager@banashree.com",
+    "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+    "name": "Store Manager",
+    "role": "editor",
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z",
+    "lastLogin": null,
+    "isActive": true
+  },
+  {
+    "id": "3",
+    "email": "staff@banashree.com",
+    "passwordHash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+    "name": "Staff Member",
+    "role": "viewer",
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z",
+    "lastLogin": null,
+    "isActive": true
+  }
+]
