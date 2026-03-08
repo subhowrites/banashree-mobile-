@@ -7,7 +7,7 @@ const {
   writeFile,
   readFile,
   handleGitHubError
-} = require("../../function/github-api");
+} = require("./api/github-api");
 
 
 const headers = {
