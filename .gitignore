@@ -1,5 +1,29 @@
-# Local Netlify folder
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Node modules
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Netlify local folder (optional)
 .netlify
-".env" 
-".env" 
-".env" 
+
+# Cloudflare Wrangler cache
+.wrangler/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code settings
+.vscode/
+
+# Temporary files
+*.tmp
+*.log

@@ -1,46 +1,40 @@
 {
   "name": "banashree-mobile",
   "version": "1.0.0",
-  "description": "Banashree Mobile Shop - Hybrid Product Management System with GitHub API",
-  "main": "index.html",
+  "description": "Banashree Mobile Shop - GitHub API CMS (Cloudflare Version)",
+  "private": false,
+
   "scripts": {
-    "start": "netlify dev",
-    "dev": "netlify dev",
-    "build": "echo 'No build required'",
-    "deploy": "netlify deploy --prod",
-    "deploy:preview": "netlify deploy",
-    "functions:serve": "netlify functions:serve",
-    "test": "echo 'No tests configured'"
+    "dev": "wrangler pages dev .",
+    "deploy": "wrangler pages deploy ."
   },
+
   "dependencies": {
     "@octokit/rest": "^20.0.0",
-    "jsonwebtoken": "^9.0.0",
-    "crypto": "^1.0.1"
+    "jsonwebtoken": "^9.0.2"
   },
+
   "devDependencies": {
-    "netlify-cli": "^17.0.0"
+    "wrangler": "^3.60.0"
   },
+
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "node": ">=18"
   },
+
   "keywords": [
+    "cloudflare-pages",
     "github-api",
-    "netlify",
-    "ecommerce",
-    "mobile-shop",
     "serverless",
-    "jamstack"
+    "mobile-shop",
+    "cms"
   ],
+
   "author": "Banashree Mobile",
   "license": "MIT",
+
   "repository": {
     "type": "git",
     "url": "https://github.com/subhowrites/banashree-mobile-"
-  },
-  "bugs": {
-    "url": "https://github.com/subhowrites/banashree-mobile-/issues"
-  },
-  "homepage": "https://banashree-mobile-.netlify.app",
-  "private": false
+  }
 }

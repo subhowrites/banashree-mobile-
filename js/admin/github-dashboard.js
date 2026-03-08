@@ -1,672 +1,338 @@
 /**
- * GITHUB-DASHBOARD.JS - GITHUB API VERSION
- * 
- * यह file admin panel के dashboard को handle करती है:
- * - Products list display (from GitHub)
- * - Add new product (via GitHub API)
- * - Delete product (via GitHub API)
- * - Edit product (via GitHub API)
+ * GITHUB-DASHBOARD.JS - FIXED VERSION
+ * Works with Cloudflare / Netlify functions
  */
 
-// ===== 1. IMPORTS =====
-import { 
-  GITHUB_CONFIG, 
-  Helpers,
-  STORAGE_KEYS 
+// ===== IMPORTS =====
+import {
+  GITHUB_CONFIG,
+  Helpers
 } from './github-config.js';
 
-import { 
-  requireAuth, 
-  adminLogout, 
+import {
+  requireAuth,
+  adminLogout,
   onAuthChange,
-  hasPermission,
-  getCurrentUserSync
+  hasPermission
 } from './github-auth.js';
 
-// ===== 2. GLOBAL VARIABLES =====
+// ===== GLOBAL VARIABLES =====
 let currentProducts = [];
 let imageFile = null;
 let editMode = false;
 let editingProductId = null;
-let editingProductSha = null; // GitHub ke liye SHA chahiye update/delete ke liye
+let editingProductSha = null;
 
-// ===== 3. API HELPER =====
-async function apiCall(endpoint, method = 'GET', data = null, isFormData = false) {
-  const url = GITHUB_CONFIG.API[endpoint] ? GITHUB_CONFIG.API[endpoint]() : `${GITHUB_CONFIG.API.getBaseUrl()}/${endpoint}`;
-  
+
+// ===== API HELPER =====
+async function apiCall(endpoint, method = 'GET', data = null) {
+
+  const url = GITHUB_CONFIG.API[endpoint]
+    ? GITHUB_CONFIG.API[endpoint]()
+    : `${GITHUB_CONFIG.API.getBaseUrl()}/${endpoint}`;
+
   const options = {
     method,
     headers: {}
   };
 
-  // Add auth token if available
   const token = Helpers.getToken();
+
   if (token) {
     options.headers['Authorization'] = `Bearer ${token}`;
   }
 
   if (data) {
-    if (isFormData) {
-      options.body = data; // FormData for file uploads
-    } else {
-      options.headers['Content-Type'] = 'application/json';
-      options.body = JSON.stringify(data);
-    }
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(data);
   }
 
   try {
+
     const response = await fetch(url, options);
-    const responseData = await response.json();
+
+    const result = await response.json();
 
     if (!response.ok) {
-      throw new Error(responseData.error || responseData.message || 'API call failed');
+      throw new Error(result.error || result.message || "API error");
     }
 
-    return responseData;
+    return result;
+
   } catch (error) {
-    console.error(`API Error (${endpoint}):`, error);
+
+    console.error("API error:", error);
+
+    alert("Server error: " + error.message);
+
     throw error;
+
   }
+
 }
 
-// ===== 4. INITIALIZE DASHBOARD =====
+
+// ===== INITIALIZE DASHBOARD =====
 export async function initDashboard() {
-  console.log('🚀 Initializing admin dashboard with GitHub API...');
-  
-  // Check authentication
+
   const user = await requireAuth();
+
   if (!user) return;
-  
-  // Update UI with user info
+
   updateUserInfo(user);
-  
-  // Load products
+
   await loadProducts();
-  
-  // Setup event listeners
+
   setupEventListeners();
-  
-  // Setup image preview
-  setupImagePreview();
-  
-  // Setup auth state change
-  onAuthChange((user) => {
-    if (user) {
-      updateUserInfo(user);
-    }
-  });
+
 }
 
-// ===== 5. UPDATE USER INFO =====
+
+// ===== USER INFO =====
 function updateUserInfo(user) {
-  const userEmailEl = document.getElementById('userEmail');
-  const userNameEl = document.getElementById('userName');
-  const userAvatar = document.getElementById('userAvatar');
-  
-  if (userEmailEl) userEmailEl.textContent = user.email;
-  
-  const displayName = user.name || user.email.split('@')[0];
-  if (userNameEl) userNameEl.textContent = displayName;
-  if (userAvatar) userAvatar.textContent = displayName.charAt(0).toUpperCase();
-  
-  // Update permissions based UI
-  updatePermissionsUI();
+
+  const email = document.getElementById("userEmail");
+  const name = document.getElementById("userName");
+  const avatar = document.getElementById("userAvatar");
+
+  if (email) email.textContent = user.email;
+
+  const displayName = user.name || user.email.split("@")[0];
+
+  if (name) name.textContent = displayName;
+
+  if (avatar) avatar.textContent = displayName.charAt(0).toUpperCase();
+
 }
 
-// ===== 6. UPDATE PERMISSIONS UI =====
-function updatePermissionsUI() {
-  const deleteBtns = document.querySelectorAll('.delete-product-btn, .delete-btn');
-  const addForm = document.getElementById('addProductForm');
-  const editBtns = document.querySelectorAll('.edit-product-btn, .edit-btn');
-  
-  if (!hasPermission('delete')) {
-    deleteBtns.forEach(btn => btn.style.display = 'none');
-  }
-  
-  if (!hasPermission('add') && addForm) {
-    addForm.style.display = 'none';
-  }
-  
-  if (!hasPermission('edit')) {
-    editBtns.forEach(btn => btn.style.display = 'none');
-  }
-}
 
-// ===== 7. LOAD PRODUCTS FROM GITHUB =====
+// ===== LOAD PRODUCTS =====
 export async function loadProducts() {
-  const productListDiv = document.getElementById('productList');
-  if (!productListDiv) return;
-  
+
+  const list = document.getElementById("productList");
+
+  if (!list) return;
+
+  list.innerHTML = "Loading products...";
+
   try {
-    productListDiv.innerHTML = '<div class="loading">Loading products from GitHub...</div>';
-    
-    // Call Netlify function to get products
-    const data = await apiCall('getProducts');
-    
+
+    const data = await apiCall("getProducts");
+
     currentProducts = data.products || data || [];
-    
-    console.log(`📦 Loaded ${currentProducts.length} products from GitHub`);
-    
-    // Render products
+
     renderProductList();
-    
-    // Update stats
-    updateStats();
-    
+
   } catch (error) {
-    console.error('Error loading products:', error);
-    productListDiv.innerHTML = `<div class="error">Error loading products: ${error.message}</div>`;
+
+    list.innerHTML = "Failed to load products";
+
   }
+
 }
 
-// ===== 8. UPDATE STATS =====
-function updateStats() {
-  const totalProductsEl = document.getElementById('totalProducts');
-  const totalCategoriesEl = document.getElementById('totalCategories');
-  const productsWithImageEl = document.getElementById('productsWithImage');
-  const productsOnDiscountEl = document.getElementById('productsOnDiscount');
-  
-  if (totalProductsEl) {
-    totalProductsEl.textContent = currentProducts.length;
-  }
-  
-  if (totalCategoriesEl) {
-    const categories = [...new Set(currentProducts.map(p => p.category).filter(Boolean))];
-    totalCategoriesEl.textContent = categories.length;
-  }
-  
-  if (productsWithImageEl) {
-    const withImage = currentProducts.filter(p => p.image && p.image !== '').length;
-    productsWithImageEl.textContent = withImage;
-  }
-  
-  if (productsOnDiscountEl) {
-    const onDiscount = currentProducts.filter(p => {
-      const variant = p.variants?.[0];
-      return variant?.discount && variant.discount > 0;
-    }).length;
-    productsOnDiscountEl.textContent = onDiscount;
-  }
-}
 
-// ===== 9. RENDER PRODUCT LIST =====
+// ===== RENDER PRODUCTS =====
 function renderProductList() {
-  const productListDiv = document.getElementById('productList');
-  if (!productListDiv) return;
-  
+
+  const container = document.getElementById("productList");
+
+  if (!container) return;
+
   if (currentProducts.length === 0) {
-    productListDiv.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><h3>No products found</h3><p>Click "Add New Product" to create your first product</p></div>';
+
+    container.innerHTML = "No products found";
+
     return;
+
   }
-  
+
   let html = '<div class="product-grid-admin">';
-  
+
   currentProducts.forEach(product => {
+
     const variant = product.variants?.[0] || {};
-    const price = variant.price || 'N/A';
+
+    const price = variant.price || 0;
+
     const discount = variant.discount || 0;
-    const finalPrice = discount > 0 ? Math.round(price * (1 - discount/100)) : price;
-    
-    // Get product ID and SHA
-    const productId = product._id || product.id || product.name?.toLowerCase().replace(/\s+/g, '-');
-    const sha = product.sha || '';
-    
+
+    const finalPrice = discount
+      ? Math.round(price * (1 - discount / 100))
+      : price;
+
+    const productId = product.id || product._id;
+
+    const sha = product.sha || "";
+
     html += `
-      <div class="product-card-admin" data-id="${productId}" data-sha="${sha}">
-        <div class="product-image-admin">
-          <img src="${product.image || 'https://via.placeholder.com/200x200?text=No+Image'}" 
-               alt="${product.name}" 
-               onerror="this.src='https://via.placeholder.com/200x200?text=No+Image'">
-        </div>
-        <div class="product-info-admin">
-          <h3>${product.name}</h3>
-          <p class="product-brand">
-            <i class="fas fa-tag"></i> ${product.brand || 'No Brand'} | 
-            <i class="fas fa-folder"></i> ${product.category || 'Uncategorized'}
-          </p>
-          <p class="product-price">
-            ₹${typeof finalPrice === 'number' ? finalPrice.toLocaleString('en-IN') : finalPrice}
-            ${discount > 0 ? `<span class="product-original-price">₹${price.toLocaleString('en-IN')}</span>` : ''}
-          </p>
-          ${discount > 0 ? `<span class="product-discount">${discount}% OFF</span>` : ''}
-          <p class="product-id" style="font-size: 11px; color: #999; margin-top: 5px;">
-            SHA: ${sha ? sha.substring(0, 7) + '...' : 'New'}
-          </p>
-        </div>
-        <div class="product-actions-admin">
-          ${hasPermission('edit') ? `<button class="edit-btn" onclick="window.editProduct('${productId}', '${sha}')"><i class="fas fa-edit"></i> Edit</button>` : ''}
-          ${hasPermission('delete') ? `<button class="delete-btn" onclick="window.deleteProduct('${productId}', '${sha}')"><i class="fas fa-trash"></i> Delete</button>` : ''}
-        </div>
-      </div>
-    `;
+
+<div class="product-card-admin">
+
+<img src="${product.image || 'https://via.placeholder.com/200'}">
+
+<h3>${product.name}</h3>
+
+<p>${product.brand || ''}</p>
+
+<p>₹${finalPrice}</p>
+
+<button onclick="window.editProduct('${productId}','${sha}')">Edit</button>
+
+<button onclick="window.deleteProduct('${productId}','${sha}')">Delete</button>
+
+</div>
+
+`;
+
   });
-  
-  html += '</div>';
-  
-  // Add stats
-  html += `
-    <div class="stats-admin">
-      <p><i class="fas fa-database"></i> Total Products: <strong>${currentProducts.length}</strong></p>
-      <p><i class="fas fa-code-branch"></i> Source: <strong>GitHub API</strong></p>
-    </div>
-  `;
-  
-  productListDiv.innerHTML = html;
-  
-  // Make functions global for onclick
+
+  html += "</div>";
+
+  container.innerHTML = html;
+
   window.editProduct = editProduct;
   window.deleteProduct = deleteProduct;
+
 }
 
-// ===== 10. SETUP EVENT LISTENERS =====
-function setupEventListeners() {
-  // Logout button
-  const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', handleLogout);
-  }
-  
-  // Add product form
-  const addForm = document.getElementById('addProductForm');
-  if (addForm) {
-    addForm.addEventListener('submit', handleAddProduct);
-  }
-  
-  // Cancel edit button
-  const cancelBtn = document.getElementById('cancelEdit');
-  if (cancelBtn) {
-    cancelBtn.addEventListener('click', resetForm);
-  }
-  
-  // Refresh button
-  const refreshBtn = document.getElementById('refreshBtn');
-  if (refreshBtn) {
-    refreshBtn.addEventListener('click', () => loadProducts());
-  }
-  
-  // Search input
-  const searchInput = document.getElementById('searchProducts');
-  const searchBtn = document.getElementById('searchBtn');
-  
-  if (searchInput && searchBtn) {
-    searchBtn.addEventListener('click', () => filterProducts(searchInput.value));
-    searchInput.addEventListener('keyup', (e) => {
-      if (e.key === 'Enter') filterProducts(searchInput.value);
-    });
-  }
-}
 
-// ===== 11. FILTER PRODUCTS =====
-function filterProducts(searchTerm) {
-  const cards = document.querySelectorAll('.product-card-admin');
-  const term = searchTerm.toLowerCase();
-  
-  cards.forEach(card => {
-    const title = card.querySelector('h3')?.textContent.toLowerCase() || '';
-    const brand = card.querySelector('.product-brand')?.textContent.toLowerCase() || '';
-    
-    if (title.includes(term) || brand.includes(term)) {
-      card.style.display = 'flex';
-    } else {
-      card.style.display = 'none';
-    }
-  });
-}
-
-// ===== 12. SETUP IMAGE PREVIEW =====
-function setupImagePreview() {
-  const imageInput = document.getElementById('productImage');
-  const previewDiv = document.getElementById('imagePreview');
-  const uploadArea = document.getElementById('imageUploadArea');
-  
-  if (!imageInput || !previewDiv) return;
-  
-  // Click on upload area
-  if (uploadArea) {
-    uploadArea.addEventListener('click', () => {
-      imageInput.click();
-    });
-    
-    // Drag & drop
-    uploadArea.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      uploadArea.style.borderColor = GITHUB_CONFIG.COLORS?.primary || '#667eea';
-      uploadArea.style.background = '#f7fafc';
-    });
-    
-    uploadArea.addEventListener('dragleave', () => {
-      uploadArea.style.borderColor = '#e2e8f0';
-      uploadArea.style.background = 'transparent';
-    });
-    
-    uploadArea.addEventListener('drop', (e) => {
-      e.preventDefault();
-      uploadArea.style.borderColor = '#e2e8f0';
-      uploadArea.style.background = 'transparent';
-      
-      if (e.dataTransfer.files.length > 0) {
-        imageInput.files = e.dataTransfer.files;
-        handleImageSelect(e.dataTransfer.files[0]);
-      }
-    });
-  }
-  
-  imageInput.addEventListener('change', (e) => {
-    if (e.target.files.length > 0) {
-      handleImageSelect(e.target.files[0]);
-    } else {
-      resetImagePreview();
-    }
-  });
-}
-
-// ===== 13. HANDLE IMAGE SELECT =====
-function handleImageSelect(file) {
-  const previewDiv = document.getElementById('imagePreview');
-  
-  if (!file) {
-    resetImagePreview();
-    return;
-  }
-  
-  // Validate file type
-  if (!file.type.startsWith('image/')) {
-    alert('Please select an image file (JPEG, PNG, etc.)');
-    resetImagePreview();
-    return;
-  }
-  
-  // Validate file size (max 5MB)
-  if (file.size > 5 * 1024 * 1024) {
-    alert('Image size should be less than 5MB');
-    resetImagePreview();
-    return;
-  }
-  
-  imageFile = file;
-  
-  // Show preview
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    previewDiv.innerHTML = `<img src="${e.target.result}" alt="Preview" class="show">`;
-    previewDiv.classList.add('show');
-  };
-  reader.readAsDataURL(file);
-}
-
-// ===== 14. RESET IMAGE PREVIEW =====
-function resetImagePreview() {
-  const previewDiv = document.getElementById('imagePreview');
-  const imageInput = document.getElementById('productImage');
-  
-  if (previewDiv) {
-    previewDiv.innerHTML = '';
-    previewDiv.classList.remove('show');
-  }
-  
-  if (imageInput) imageInput.value = '';
-  imageFile = null;
-}
-
-// ===== 15. HANDLE ADD/EDIT PRODUCT =====
+// ===== ADD PRODUCT =====
 async function handleAddProduct(e) {
+
   e.preventDefault();
-  
-  // Check permission
-  if (!hasPermission('add') && !editMode) {
-    alert('You do not have permission to add products');
+
+  const name = document.getElementById("productName").value;
+  const brand = document.getElementById("productBrand").value;
+  const category = document.getElementById("productCategory").value;
+  const price = document.getElementById("productPrice").value;
+
+  if (!name || !brand || !category || !price) {
+
+    alert("Fill all fields");
+
     return;
+
   }
-  
-  // Get form values
-  const formData = {
-    name: document.getElementById('productName')?.value,
-    brand: document.getElementById('productBrand')?.value,
-    category: document.getElementById('productCategory')?.value,
-    price: parseFloat(document.getElementById('productPrice')?.value),
-    discount: parseFloat(document.getElementById('productDiscount')?.value) || 0,
-    ram: document.getElementById('productRam')?.value || '8 GB',
-    storage: document.getElementById('productStorage')?.value || '128 GB',
-    processor: document.getElementById('productProcessor')?.value || '',
-    camera: document.getElementById('productCamera')?.value || '',
-    battery: document.getElementById('productBattery')?.value || '',
-    display: document.getElementById('productDisplay')?.value || '',
-    description: document.getElementById('productDescription')?.value || ''
+
+  const product = {
+
+    id: name.toLowerCase().replace(/\s/g, "-"),
+
+    name,
+    brand,
+    category,
+
+    variants: [{
+      id: "default",
+      price: parseFloat(price),
+      discount: 0
+    }]
+
   };
-  
-  // Validate required fields
-  if (!formData.name || !formData.brand || !formData.category || !formData.price) {
-    alert('Please fill all required fields');
-    return;
-  }
-  
-  // Disable submit button
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  const originalText = submitBtn.textContent;
-  submitBtn.disabled = true;
-  submitBtn.textContent = editMode ? 'Updating...' : 'Adding...';
-  
+
   try {
-    // Handle image upload (first)
-    let imageUrl = document.getElementById('currentImage')?.value || '';
-    
-    if (imageFile) {
-      // For now, we'll use a placeholder
-      // In production, you'd upload to Cloudinary or similar
-      alert('Image upload requires Cloudinary or similar service. Using placeholder for now.');
-      imageUrl = `https://via.placeholder.com/400x400?text=${encodeURIComponent(formData.name)}`;
-    }
-    
-    // Create product ID from name
-    const productId = formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    
-    // Create variant ID
-    const variantId = `${formData.storage.replace(/\s/g, '')}-${formData.ram.replace(/\s/g, '')}`;
-    
-    // Create product object
-    const productData = {
-      id: productId,
-      name: formData.name,
-      brand: formData.brand,
-      category: formData.category,
-      image: imageUrl,
-      colors: [],
-      variants: [{
-        id: variantId,
-        ram: formData.ram,
-        storage: formData.storage,
-        price: formData.price,
-        discount: formData.discount,
-        available: true
-      }],
-      default: {
-        color: "",
-        variant: variantId
-      },
-      specs: {
-        Processor: formData.processor,
-        Camera: formData.camera,
-        Battery: formData.battery,
-        Display: formData.display,
-        Description: formData.description
-      },
-      tags: [],
-      status: "active",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    let result;
-    
-    if (editMode && editingProductId) {
-      // Update existing product
-      result = await apiCall('updateProduct', 'PUT', {
+
+    if (editMode) {
+
+      await apiCall("updateProduct", "PUT", {
         id: editingProductId,
         sha: editingProductSha,
-        ...productData
+        ...product
       });
+
     } else {
-      // Add new product
-      result = await apiCall('addProduct', 'POST', productData);
+
+      await apiCall("addProduct", "POST", product);
+
     }
-    
-    // Reset form and reload
-    resetForm();
+
     await loadProducts();
-    
-    alert(editMode ? 'Product updated successfully!' : 'Product added successfully!');
-    
+
+    alert("Product saved");
+
   } catch (error) {
-    console.error('Error saving product:', error);
-    alert('Error saving product: ' + error.message);
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = originalText;
+
+    alert(error.message);
+
   }
+
 }
 
-// ===== 16. DELETE PRODUCT =====
-export async function deleteProduct(productId, sha) {
-  // Check permission
-  if (!hasPermission('delete')) {
-    alert('You do not have permission to delete products');
-    return;
-  }
-  
-  if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return;
-  
-  const deleteBtn = event?.target;
-  if (deleteBtn) {
-    deleteBtn.disabled = true;
-    deleteBtn.textContent = 'Deleting...';
-  }
-  
+
+// ===== DELETE PRODUCT =====
+export async function deleteProduct(id, sha) {
+
+  if (!confirm("Delete product?")) return;
+
   try {
-    await apiCall('deleteProduct', 'DELETE', { id: productId, sha: sha });
-    
-    // Reload products
+
+    await apiCall("deleteProduct", "DELETE", { id, sha });
+
     await loadProducts();
-    
-    alert('Product deleted successfully!');
-    
+
+    alert("Product deleted");
+
   } catch (error) {
-    console.error('Error deleting product:', error);
-    alert('Error deleting product: ' + error.message);
-  } finally {
-    if (deleteBtn) {
-      deleteBtn.disabled = false;
-      deleteBtn.textContent = 'Delete';
-    }
+
+    alert(error.message);
+
   }
+
 }
 
-// ===== 17. EDIT PRODUCT =====
-export async function editProduct(productId, sha) {
-  // Check permission
-  if (!hasPermission('edit')) {
-    alert('You do not have permission to edit products');
-    return;
-  }
-  
-  const product = currentProducts.find(p => (p.id === productId || p._id === productId));
+
+// ===== EDIT PRODUCT =====
+export function editProduct(id, sha) {
+
+  const product = currentProducts.find(p => p.id === id || p._id === id);
+
   if (!product) return;
-  
+
   editMode = true;
-  editingProductId = productId;
+
+  editingProductId = id;
+
   editingProductSha = sha;
-  
-  // Fill form with product data
-  document.getElementById('productName').value = product.name || '';
-  document.getElementById('productBrand').value = product.brand || '';
-  document.getElementById('productCategory').value = product.category || '';
-  
-  const variant = product.variants?.[0] || {};
-  document.getElementById('productPrice').value = variant.price || '';
-  document.getElementById('productDiscount').value = variant.discount || '';
-  document.getElementById('productRam').value = variant.ram || '8 GB';
-  document.getElementById('productStorage').value = variant.storage || '128 GB';
-  
-  const specs = product.specs || {};
-  document.getElementById('productProcessor').value = specs.Processor || '';
-  document.getElementById('productCamera').value = specs.Camera || '';
-  document.getElementById('productBattery').value = specs.Battery || '';
-  document.getElementById('productDisplay').value = specs.Display || '';
-  document.getElementById('productDescription').value = specs.Description || '';
-  
-  // Show current image
-  const previewDiv = document.getElementById('imagePreview');
-  if (previewDiv && product.image) {
-    previewDiv.innerHTML = `<img src="${product.image}" alt="Current" class="show">`;
-    previewDiv.classList.add('show');
+
+  document.getElementById("productName").value = product.name;
+  document.getElementById("productBrand").value = product.brand;
+  document.getElementById("productCategory").value = product.category;
+
+}
+
+
+// ===== EVENTS =====
+function setupEventListeners() {
+
+  const form = document.getElementById("addProductForm");
+
+  if (form) {
+
+    form.addEventListener("submit", handleAddProduct);
+
   }
-  
-  // Store current image URL
-  let currentImageInput = document.getElementById('currentImage');
-  if (!currentImageInput) {
-    currentImageInput = document.createElement('input');
-    currentImageInput.type = 'hidden';
-    currentImageInput.id = 'currentImage';
-    document.getElementById('addProductForm').appendChild(currentImageInput);
+
+  const logout = document.getElementById("logoutBtn");
+
+  if (logout) {
+
+    logout.addEventListener("click", async () => {
+
+      await adminLogout();
+
+      window.location.href = "login.html";
+
+    });
+
   }
-  currentImageInput.value = product.image || '';
-  
-  // Change form title
-  const formTitle = document.getElementById('formTitle');
-  if (formTitle) formTitle.textContent = 'Edit Product';
-  
-  // Show cancel button
-  const cancelBtn = document.getElementById('cancelEdit');
-  if (cancelBtn) cancelBtn.style.display = 'inline-block';
-  
-  // Scroll to form
-  document.getElementById('addProductForm').scrollIntoView({ behavior: 'smooth' });
+
 }
 
-// ===== 18. RESET FORM =====
-function resetForm() {
-  const form = document.getElementById('addProductForm');
-  if (form) form.reset();
-  
-  resetImagePreview();
-  
-  imageFile = null;
-  editMode = false;
-  editingProductId = null;
-  editingProductSha = null;
-  
-  const formTitle = document.getElementById('formTitle');
-  if (formTitle) formTitle.textContent = 'Add New Product';
-  
-  const cancelBtn = document.getElementById('cancelEdit');
-  if (cancelBtn) cancelBtn.style.display = 'none';
-  
-  const currentImageInput = document.getElementById('currentImage');
-  if (currentImageInput) currentImageInput.value = '';
-}
 
-// ===== 19. HANDLE LOGOUT =====
-async function handleLogout() {
-  const result = await adminLogout();
-  if (result.success) {
-    window.location.href = 'login.html';
-  } else {
-    alert(result.message);
-  }
-}
+// ===== AUTO INIT =====
+document.addEventListener("DOMContentLoaded", () => {
 
-// ===== 20. EXPORT FUNCTIONS =====
-export default {
-  initDashboard,
-  loadProducts,
-  deleteProduct,
-  editProduct
-};
+  initDashboard();
 
-// Auto-initialize when script loads
-if (typeof window !== 'undefined' && window.location.pathname.includes('admin')) {
-  document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('dashboard-main') || document.querySelector('.dashboard-container')) {
-      initDashboard();
-    }
-  });
-}
+});

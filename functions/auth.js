@@ -1,537 +1,331 @@
 /**
- * AUTH.JS - Netlify Function
- * 
- * Admin authentication के लिए GitHub-based auth:
- * - Login (JWT token generate)
- * - Logout (token invalidate)
- * - Verify token
- * - Change password
- * 
- * API Endpoint: /.netlify/functions/auth
+ * AUTH.JS
+ * Admin authentication using GitHub database
  */
 
-// ===== 1. IMPORTS =====
 const { readFile, writeFile } = require('./utils/github-api');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
-// ===== 2. CONFIGURATION =====
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-this-in-production';
-const JWT_EXPIRY = '24h'; // 24 hours
-const REFRESH_TOKEN_EXPIRY = '7d'; // 7 days
-const USERS_FILE_PATH = 'users.json'; // GitHub पर users.json file
+const JWT_SECRET = process.env.JWT_SECRET || 'banashree-secret';
+const USERS_FILE = 'users.json';
 
-// ===== 3. CORS HEADERS =====
 const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'POST, GET, DELETE, OPTIONS',
-    'Access-Control-Allow-Credentials': 'true',
-    'Content-Type': 'application/json'
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Methods": "POST, GET, DELETE, OPTIONS",
+  "Content-Type": "application/json"
 };
 
-// ===== 4. PASSWORD HASHING =====
+
+// ===== HASH PASSWORD =====
 function hashPassword(password) {
-    return crypto.createHash('sha256').update(password).digest('hex');
+  return crypto.createHash("sha256").update(password).digest("hex");
 }
 
-// ===== 5. GENERATE JWT TOKEN =====
+
+// ===== TOKEN =====
 function generateToken(user) {
-    const payload = {
-        id: user.id,
-        email: user.email,
-        role: user.role || 'admin',
-        name: user.name || user.email.split('@')[0]
+
+  return jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+      role: user.role
+    },
+    JWT_SECRET,
+    { expiresIn: "24h" }
+  );
+
+}
+
+
+// ===== VERIFY TOKEN =====
+function verifyToken(token) {
+
+  try {
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    return {
+      valid: true,
+      user: decoded
     };
 
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
-    
-    // Generate refresh token
-    const refreshToken = jwt.sign(
-        { id: user.id, type: 'refresh' },
-        JWT_SECRET,
-        { expiresIn: REFRESH_TOKEN_EXPIRY }
+  } catch {
+
+    return { valid: false };
+
+  }
+
+}
+
+
+// ===== GET USERS =====
+async function getUsers() {
+
+  const file = await readFile(USERS_FILE);
+
+  if (!file) {
+
+    const defaultUsers = [
+
+      {
+        id: "1",
+        email: "admin@banashree.com",
+        passwordHash: hashPassword("admin123"),
+        name: "Admin",
+        role: "admin",
+        isActive: true,
+        createdAt: new Date().toISOString()
+      }
+
+    ];
+
+    await writeFile(
+      USERS_FILE,
+      defaultUsers,
+      null,
+      "Create users.json"
     );
 
-    return { token, refreshToken, expiresIn: JWT_EXPIRY };
+    return defaultUsers;
+
+  }
+
+  return file.content;
+
 }
 
-// ===== 6. VERIFY JWT TOKEN =====
-function verifyToken(token) {
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        return { valid: true, decoded };
-    } catch (error) {
-        return { valid: false, error: error.message };
-    }
+
+// ===== LOGIN =====
+async function login(event) {
+
+  let body;
+
+  try {
+    body = JSON.parse(event.body);
+  } catch {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        success: false,
+        error: "Invalid JSON"
+      })
+    };
+  }
+
+  const { email, password } = body;
+
+  if (!email || !password) {
+
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        success: false,
+        error: "Email and password required"
+      })
+    };
+
+  }
+
+  const users = await getUsers();
+
+  const user = users.find(
+    u => u.email.toLowerCase() === email.toLowerCase()
+  );
+
+  if (!user) {
+
+    return {
+      statusCode: 401,
+      body: JSON.stringify({
+        success: false,
+        error: "Invalid credentials"
+      })
+    };
+
+  }
+
+  const passwordHash = hashPassword(password);
+
+  if (passwordHash !== user.passwordHash) {
+
+    return {
+      statusCode: 401,
+      body: JSON.stringify({
+        success: false,
+        error: "Invalid credentials"
+      })
+    };
+
+  }
+
+  const token = generateToken(user);
+
+  return {
+
+    statusCode: 200,
+
+    body: JSON.stringify({
+
+      success: true,
+
+      message: "Login successful",
+
+      token,
+
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role
+      }
+
+    })
+
+  };
+
 }
 
-// ===== 7. GET USERS FROM GITHUB =====
-async function getUsers() {
-    try {
-        const usersFile = await readFile(USERS_FILE_PATH);
-        if (!usersFile) {
-            // Create default users file
-            const defaultUsers = [
-                {
-                    id: '1',
-                    email: 'admin@banashree.com',
-                    passwordHash: hashPassword('admin123'),
-                    name: 'Admin User',
-                    role: 'admin',
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    lastLogin: null,
-                    isActive: true
-                }
-            ];
-            
-            await writeFile(
-                USERS_FILE_PATH, 
-                defaultUsers, 
-                null, 
-                'Initialize users.json with default admin'
-            );
-            
-            return defaultUsers;
-        }
-        
-        return usersFile.content;
-    } catch (error) {
-        console.error('Error reading users file:', error);
-        return [];
-    }
+
+// ===== VERIFY =====
+function verify(event) {
+
+  const authHeader =
+    event.headers.authorization ||
+    event.headers.Authorization;
+
+  if (!authHeader) {
+
+    return {
+      statusCode: 401,
+      body: JSON.stringify({
+        success: false,
+        error: "No token"
+      })
+    };
+
+  }
+
+  const token = authHeader.replace("Bearer ", "");
+
+  const result = verifyToken(token);
+
+  if (!result.valid) {
+
+    return {
+      statusCode: 401,
+      body: JSON.stringify({
+        success: false,
+        error: "Invalid token"
+      })
+    };
+
+  }
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      success: true,
+      user: result.user
+    })
+  };
+
 }
 
-// ===== 8. SAVE USERS TO GITHUB =====
-async function saveUsers(users, sha) {
-    try {
-        const result = await writeFile(
-            USERS_FILE_PATH,
-            users,
-            sha,
-            'Update users'
-        );
-        return result;
-    } catch (error) {
-        console.error('Error saving users:', error);
-        throw error;
-    }
+
+// ===== LOGOUT =====
+function logout() {
+
+  return {
+
+    statusCode: 200,
+
+    body: JSON.stringify({
+
+      success: true,
+
+      message: "Logged out"
+
+    })
+
+  };
+
 }
 
-// ===== 9. LOGIN HANDLER =====
-async function handleLogin(event) {
-    try {
-        const { email, password } = JSON.parse(event.body);
 
-        // Validation
-        if (!email || !password) {
-            return {
-                statusCode: 400,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'Email and password are required'
-                })
-            };
-        }
-
-        // Get users from GitHub
-        const users = await getUsers();
-        const usersFile = await readFile(USERS_FILE_PATH);
-        const fileSha = usersFile?.sha || null;
-
-        // Find user by email
-        const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-
-        if (!user) {
-            return {
-                statusCode: 401,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'Invalid email or password'
-                })
-            };
-        }
-
-        // Check if user is active
-        if (user.isActive === false) {
-            return {
-                statusCode: 403,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'Account is disabled. Contact administrator.'
-                })
-            };
-        }
-
-        // Verify password
-        const passwordHash = hashPassword(password);
-        if (user.passwordHash !== passwordHash) {
-            return {
-                statusCode: 401,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'Invalid email or password'
-                })
-            };
-        }
-
-        // Update last login
-        user.lastLogin = new Date().toISOString();
-        user.updatedAt = new Date().toISOString();
-        
-        // Save updated user data back to GitHub
-        await saveUsers(users, fileSha);
-
-        // Generate tokens
-        const { token, refreshToken, expiresIn } = generateToken(user);
-
-        // Remove sensitive data
-        const { passwordHash: _, ...userWithoutPassword } = user;
-
-        return {
-            statusCode: 200,
-            body: JSON.stringify({
-                success: true,
-                message: 'Login successful',
-                token,
-                refreshToken,
-                expiresIn,
-                user: {
-                    id: user.id,
-                    email: user.email,
-                    name: user.name || user.email.split('@')[0],
-                    role: user.role
-                }
-            })
-        };
-
-    } catch (error) {
-        console.error('Login error:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({
-                success: false,
-                error: 'Login failed',
-                message: error.message
-            })
-        };
-    }
-}
-
-// ===== 10. VERIFY TOKEN HANDLER =====
-async function handleVerify(event) {
-    try {
-        const authHeader = event.headers.authorization || event.headers.Authorization;
-        
-        if (!authHeader) {
-            return {
-                statusCode: 401,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'No token provided'
-                })
-            };
-        }
-
-        const token = authHeader.replace('Bearer ', '');
-        const verification = verifyToken(token);
-
-        if (!verification.valid) {
-            return {
-                statusCode: 401,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'Invalid or expired token',
-                    details: verification.error
-                })
-            };
-        }
-
-        return {
-            statusCode: 200,
-            body: JSON.stringify({
-                success: true,
-                message: 'Token is valid',
-                user: verification.decoded
-            })
-        };
-
-    } catch (error) {
-        console.error('Verify error:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({
-                success: false,
-                error: 'Token verification failed'
-            })
-        };
-    }
-}
-
-// ===== 11. REFRESH TOKEN HANDLER =====
-async function handleRefresh(event) {
-    try {
-        const { refreshToken } = JSON.parse(event.body);
-
-        if (!refreshToken) {
-            return {
-                statusCode: 400,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'Refresh token is required'
-                })
-            };
-        }
-
-        // Verify refresh token
-        const verification = verifyToken(refreshToken);
-
-        if (!verification.valid || verification.decoded.type !== 'refresh') {
-            return {
-                statusCode: 401,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'Invalid refresh token'
-                })
-            };
-        }
-
-        // Get users from GitHub
-        const users = await getUsers();
-        
-        // Find user
-        const user = users.find(u => u.id === verification.decoded.id);
-
-        if (!user) {
-            return {
-                statusCode: 401,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'User not found'
-                })
-            };
-        }
-
-        // Generate new tokens
-        const { token, refreshToken: newRefreshToken, expiresIn } = generateToken(user);
-
-        return {
-            statusCode: 200,
-            body: JSON.stringify({
-                success: true,
-                token,
-                refreshToken: newRefreshToken,
-                expiresIn
-            })
-        };
-
-    } catch (error) {
-        console.error('Refresh error:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({
-                success: false,
-                error: 'Token refresh failed'
-            })
-        };
-    }
-}
-
-// ===== 12. CHANGE PASSWORD HANDLER =====
-async function handleChangePassword(event) {
-    try {
-        // Verify token first
-        const authHeader = event.headers.authorization || event.headers.Authorization;
-        
-        if (!authHeader) {
-            return {
-                statusCode: 401,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'No token provided'
-                })
-            };
-        }
-
-        const token = authHeader.replace('Bearer ', '');
-        const verification = verifyToken(token);
-
-        if (!verification.valid) {
-            return {
-                statusCode: 401,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'Invalid or expired token'
-                })
-            };
-        }
-
-        const { currentPassword, newPassword } = JSON.parse(event.body);
-
-        // Validate new password
-        if (!newPassword || newPassword.length < 6) {
-            return {
-                statusCode: 400,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'New password must be at least 6 characters long'
-                })
-            };
-        }
-
-        // Get users from GitHub
-        const users = await getUsers();
-        const usersFile = await readFile(USERS_FILE_PATH);
-        const fileSha = usersFile?.sha || null;
-
-        // Find user
-        const user = users.find(u => u.id === verification.decoded.id);
-
-        if (!user) {
-            return {
-                statusCode: 404,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'User not found'
-                })
-            };
-        }
-
-        // Verify current password
-        const currentPasswordHash = hashPassword(currentPassword);
-        if (user.passwordHash !== currentPasswordHash) {
-            return {
-                statusCode: 401,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'Current password is incorrect'
-                })
-            };
-        }
-
-        // Update password
-        user.passwordHash = hashPassword(newPassword);
-        user.updatedAt = new Date().toISOString();
-        
-        // Save updated users back to GitHub
-        await saveUsers(users, fileSha);
-
-        return {
-            statusCode: 200,
-            body: JSON.stringify({
-                success: true,
-                message: 'Password changed successfully'
-            })
-        };
-
-    } catch (error) {
-        console.error('Change password error:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({
-                success: false,
-                error: 'Password change failed'
-            })
-        };
-    }
-}
-
-// ===== 13. LOGOUT HANDLER =====
-async function handleLogout(event) {
-    try {
-        // In a real implementation, you might want to blacklist the token
-        // For now, just return success (client will remove token)
-        
-        return {
-            statusCode: 200,
-            body: JSON.stringify({
-                success: true,
-                message: 'Logout successful'
-            })
-        };
-
-    } catch (error) {
-        console.error('Logout error:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({
-                success: false,
-                error: 'Logout failed'
-            })
-        };
-    }
-}
-
-// ===== 14. MAIN HANDLER =====
+// ===== MAIN HANDLER =====
 exports.handler = async (event) => {
-    console.log('🔐 auth function invoked');
-    console.log('HTTP Method:', event.httpMethod);
-    console.log('Path:', event.path);
 
-    // Handle preflight OPTIONS request
-    if (event.httpMethod === 'OPTIONS') {
-        return {
-            statusCode: 200,
-            headers,
-            body: ''
-        };
+  if (event.httpMethod === "OPTIONS") {
+
+    return {
+      statusCode: 200,
+      headers,
+      body: ""
+    };
+
+  }
+
+  try {
+
+    const params =
+      event.queryStringParameters || {};
+
+    if (event.httpMethod === "POST" && !params.action) {
+
+      const result = await login(event);
+
+      return { ...result, headers };
+
     }
 
-    try {
-        // Route based on HTTP method and query parameters
-        const params = event.queryStringParameters || {};
+    if (event.httpMethod === "GET" && params.verify === "true") {
 
-        // GET /auth?verify=true - Verify token
-        if (event.httpMethod === 'GET' && params.verify === 'true') {
-            const result = await handleVerify(event);
-            return { ...result, headers };
-        }
+      const result = verify(event);
 
-        // POST /auth - Login
-        if (event.httpMethod === 'POST' && !params.action) {
-            const result = await handleLogin(event);
-            return { ...result, headers };
-        }
+      return { ...result, headers };
 
-        // POST /auth?action=refresh - Refresh token
-        if (event.httpMethod === 'POST' && params.action === 'refresh') {
-            const result = await handleRefresh(event);
-            return { ...result, headers };
-        }
-
-        // POST /auth?action=change-password - Change password
-        if (event.httpMethod === 'POST' && params.action === 'change-password') {
-            const result = await handleChangePassword(event);
-            return { ...result, headers };
-        }
-
-        // DELETE /auth - Logout
-        if (event.httpMethod === 'DELETE') {
-            const result = await handleLogout(event);
-            return { ...result, headers };
-        }
-
-        // Invalid endpoint
-        return {
-            statusCode: 404,
-            headers,
-            body: JSON.stringify({
-                success: false,
-                error: 'Endpoint not found'
-            })
-        };
-
-    } catch (error) {
-        console.error('Auth function error:', error);
-        return {
-            statusCode: 500,
-            headers,
-            body: JSON.stringify({
-                success: false,
-                error: 'Authentication service error',
-                message: error.message
-            })
-        };
     }
+
+    if (event.httpMethod === "DELETE") {
+
+      const result = logout();
+
+      return { ...result, headers };
+
+    }
+
+    return {
+
+      statusCode: 404,
+
+      headers,
+
+      body: JSON.stringify({
+        success: false,
+        error: "Endpoint not found"
+      })
+
+    };
+
+  } catch (error) {
+
+    console.error("Auth error:", error);
+
+    return {
+
+      statusCode: 500,
+
+      headers,
+
+      body: JSON.stringify({
+        success: false,
+        error: "Server error"
+      })
+
+    };
+
+  }
+
 };
