@@ -8,7 +8,7 @@ const {
   getProductsByCategory,
   getJsonFile,
   handleGitHubError
-} = require("./api/github-api");
+} = require("./github-api");
 
 
 const headers = {
