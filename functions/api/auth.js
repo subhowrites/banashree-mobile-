@@ -3,7 +3,7 @@
  * Admin authentication using GitHub database
  */
 
-const { readFile, writeFile } = require('./utils/github-api');
+const { readFile, writeFile } = require('./api/github-api');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 

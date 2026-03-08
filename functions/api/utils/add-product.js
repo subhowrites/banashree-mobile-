@@ -8,7 +8,7 @@ const {
   getProductPath,
   fileExists,
   handleGitHubError
-} = require("./utils/github-api");
+} = require("../github-api");
 
 
 // ===== CORS HEADERS =====

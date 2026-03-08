@@ -7,7 +7,7 @@ const {
   deleteFile,
   readFile,
   handleGitHubError
-} = require("./utils/github-api");
+} = require("./api/github-api");
 
 
 // ===== CORS =====
